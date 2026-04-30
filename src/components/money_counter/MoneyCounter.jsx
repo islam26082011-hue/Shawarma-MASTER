@@ -1,3 +1,3 @@
-export default function MoneyCounter() {
-  return <div className="money-counter">Деньги: 0</div>;
+export default function MoneyCounter({ money }) {
+  return <div className="money-counter">Деньги: {money}</div>;
 }

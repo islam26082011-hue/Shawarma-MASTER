@@ -1,0 +1,38 @@
+.btn {
+  position: relative;
+  overflow: hidden; /* Чтобы прогресс-бар не вылезал за скругления */
+  padding: 15px 30px;
+  background: #2a0a2a; /* Твой темный фон */
+  color: #c084fc; /* Твой неоновый фиолетовый */
+  border: 2px solid #c084fc;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Прогресс-бар */
+.btn::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px; /* Толщина полоски */
+  background: #ff00ff; /* Яркий неон */
+  box-shadow: 0 0 10px #ff00ff;
+  width: 0%; /* Изначально ширина ноль */
+}
+
+/* Состояние при готовке */
+.btn.is-loading::after {
+  /* Мы берем время из CSS переменной, которую передадим через style */
+  animation: progress var(--cooking-time) linear forwards;
+}
+
+@keyframes progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
