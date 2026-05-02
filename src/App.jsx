@@ -1,46 +1,28 @@
-import { useState } from "react";
-import { useCustomerFlow } from "./hooks/useCustomerFlow"; // Импортируем нашу логику
-
-import Market from "./components/market/market.jsx";
-import Button from "./components/button/button.jsx";
-import MoneyCounter from "./components/money_counter/MoneyCounter.jsx";
-import ShawarmaCounter from "./components/shawarma_counter/ShawarmaCounter.jsx";
-import Window from "./components/window/window.jsx";
-import ProductsBar from "./components/products_bar/ProductsBar.jsx";
+import React, { useState, useEffect } from 'react';
+import { auth } from './services/firebase'; 
+import Auth from './components/auth/auth'; 
+import Game from './Game'; 
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [money, setMoney] = useState(0);
-  const [isCooking, setIsCooking] = useState(false);
-  const cookingTime = 10000;
+  const [user, setUser] = useState(null); // Стейт для хранения залогиненного юзера
+  const [loading, setLoading] = useState(true); // Пока Firebase проверяет вход, покажем загрузку
 
-  const { currentCustomer } = useCustomerFlow(count, setCount, level, setMoney);
+  useEffect(() => {
+    // Эта функция — «слушатель». Она сама поймет, если юзер уже логинился ранее
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser); // Если юзер есть — сохраняем его в стейт
+      setLoading(false); // Проверка закончена
+    });
+    return () => unsubscribe(); // Чистим за собой
+  }, []);
+
+  if (loading) return <div>Загрузка повара...</div>; // Чтобы экран не мигал при перезагрузке
 
   return (
-    <>
-      <MoneyCounter money={money} />
-      <ShawarmaCounter count={count} />
-
-      <button onClick={() => setLevel((prev) => prev + 1)}>
-        Уровень: {level}
-      </button>
-
-      <Button
-        isCooking={isCooking}
-        setCount={setCount}
-        count={count}
-        setIsCooking={setIsCooking}
-        cookingTime={cookingTime}
-        style={{ "--cooking-time": `${cookingTime}ms` }}
-      />
-
-      <Market />
-
-      <Window currentCustomer={currentCustomer} hidden={!currentCustomer} />
-
-      <ProductsBar />
-    </>
+    <div className="App">
+      {/* Условный рендеринг: если user не null — рендерим Game, иначе Auth */}
+      {user ? <Game user={user} /> : <Auth setUser={setUser} />}
+    </div>
   );
 }
 

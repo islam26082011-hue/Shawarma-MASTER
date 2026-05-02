@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { customersData } from "../constants/customers.js";
 import { menuData } from "../constants/menu.js";
 
-export function useCustomerFlow(count, setCount, level, setMoney) {
+export function useCustomerFlow(count, setCount, level, setMoney, total, setTotal) {
   const [currentCustomer, setCurrentCustomer] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -37,8 +37,10 @@ export function useCustomerFlow(count, setCount, level, setMoney) {
 
         // Имитируем время на покупку (1 секунда)
         setTimeout(() => {
-          setCount((prev) => Math.max(0, prev - 1));
           setMoney((prev) => prev + currentCustomer.order.price);
+          // Уменьшаем текущий запас на 1 (или на количество в заказе)
+          setCount((prev) => prev - 1); 
+          
           setCurrentCustomer(null);
           setIsProcessing(false);
         }, 1000);
@@ -46,7 +48,7 @@ export function useCustomerFlow(count, setCount, level, setMoney) {
 
       return () => clearTimeout(processTimer);
     }
-  }, [currentCustomer, count, isProcessing, setCount, setMoney]);
+  }, [currentCustomer, count, isProcessing, setCount, setMoney, setTotal]);
 
   return { currentCustomer };
 }

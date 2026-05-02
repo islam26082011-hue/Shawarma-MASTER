@@ -1,6 +1,6 @@
 import "./button.css";
 
-export default function Button({ setCount, isCooking, setIsCooking, cookingTime, style }) {
+export default function Button({ setCount, isCooking, setIsCooking, cookingTime, style, setTotal }) {
   
   function handleStartCooking(){
     if (isCooking) return;
@@ -8,20 +8,30 @@ export default function Button({ setCount, isCooking, setIsCooking, cookingTime,
     setIsCooking(true);
     setTimeout(() => {
       setCount((prev) => prev + 1);
+      setTotal(prev => prev + 1)
       setIsCooking(false);
     }, cookingTime);
   }
 
   return (
-    <button 
-      // Добавляем класс is-loading, если идет готовка
-      className={`btn ${isCooking ? "is-loading" : ""}`} 
-      onClick={handleStartCooking}
-      disabled={isCooking}
-      // Пробрасываем стиль с переменной --cooking-time дальше в HTML
-      style={style} 
-    >
-      {isCooking ? "Готовим..." : "Готовить шаурму"}
-    </button>
+    <div className={`btn-container ${isCooking ? "is-loading" : ""}`} style={style}>
+      {/* SVG Круг прогресса */}
+      <svg className="progress-svg" width="120" height="120">
+        <circle 
+          className="progress-circle" 
+          cx="60" 
+          cy="60" 
+          r="54" /* Радиус чуть больше кнопки, чтобы идти снаружи */
+        />
+      </svg>
+
+      <button 
+        className="btn" 
+        onClick={handleStartCooking}
+        disabled={isCooking}
+      >
+        {isCooking ? "..." : "🌯"}
+      </button>
+    </div>
   );
 }
