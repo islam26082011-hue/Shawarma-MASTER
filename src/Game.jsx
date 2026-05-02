@@ -7,14 +7,16 @@ import MoneyCounter from "./components/money_counter/MoneyCounter.jsx";
 import ShawarmaCounter from "./components/shawarma_counter/ShawarmaCounter.jsx";
 import Window from "./components/window/window.jsx";
 import ProductsBar from "./components/products_bar/ProductsBar.jsx";
-import LevelUpPanel from "./components/LevelUpPanel/LevelUpPanel.jsx"
+import LevelUpPanel from "./components/LevelUpPanel/LevelUpPanel.jsx";
 import { LEVEL_REQUIREMENTS } from "./constants/upgrades.js";
+import { playerProgress } from "./constants/playerProgress.js";
 
 export default function Game({ user }) {
   const [count, setCount] = useState(0);
   const [level, setLevel] = useState(1);
   const [money, setMoney] = useState(0);
   const [total, setTotal] = useState(0);
+  const [ingredients, setIngredients] = useState(playerProgress.ingredients);
   const [isCooking, setIsCooking] = useState(false);
   const cookingTime = 10000;
 
@@ -59,21 +61,27 @@ export default function Game({ user }) {
         onLevelUp={() => setLevel((p) => p + 1)}
       />
 
-      <button onClick={() => setLevel((p) => p + 1)}>Уровень: {level}</button>
-
       <Button
         isCooking={isCooking}
         setCount={setCount}
-        setTotal={setTotal} // Передаем, чтобы увеличивать при готовности
-        count={count}
+        setTotal={setTotal}
         setIsCooking={setIsCooking}
         cookingTime={cookingTime}
+        ingredients={ingredients}
+        setIngredients={setIngredients}
+        currentCustomer={currentCustomer} 
+        activeRecipe={currentCustomer?.order?.recipe}
         style={{ "--cooking-time": `${cookingTime}ms` }}
       />
 
-      <Market />
+      <Market
+        money={money}
+        setMoney={setMoney}
+        ingredients={ingredients}
+        setIngredients={setIngredients}
+      />
       <Window currentCustomer={currentCustomer} hidden={!currentCustomer} />
-      <ProductsBar />
+      <ProductsBar ingredients={ingredients} />
     </>
   );
 }

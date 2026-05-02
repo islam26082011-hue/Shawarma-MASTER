@@ -6,8 +6,8 @@ export default function Shop({ money, setMoney, upgrades, setUpgrades }) {
     if (money >= item.cost) {
       setMoney((prev) => prev - item.cost);
       setUpgrades((prev) => [...prev, item]);
-    } else {
-      alert("Недостаточно денег!");
+    } if(money <= item.cost){
+      alert("не хватает бабок")
     }
   };
 
