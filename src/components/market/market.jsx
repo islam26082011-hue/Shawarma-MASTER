@@ -51,7 +51,7 @@ export default function Market({ money, setMoney, ingredients, setIngredients })
                 border: '1px solid #bc13fe',
                 borderRadius: '8px',
                 background: isFull ? '#ccc' : 'transparent',
-                color: isFull ? '#666' : 'inherit'
+                color: isFull ? '#666' : 'black'
               }}
             >
               {isFull ? `Склад ${type} полон` : `Купить ${type} — ${prices[type]} 💰`}

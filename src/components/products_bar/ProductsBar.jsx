@@ -21,8 +21,8 @@ export default function ProductsBar({ ingredients = {} }) {
         return (
           <div key={type} style={{ marginBottom: "15px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-              <span style={{ fontWeight: "bold", textTransform: "capitalize" }}>{type}</span>
-              <span style={{ color: amount === 0 ? "red" : "inherit" }}>
+              <span style={{ fontWeight: "bold", textTransform: "capitalize", color: "black" }}>{type}</span>
+              <span style={{ color: amount === 0 ? "red" : "black" }}>
                 {amount} / 50
               </span>
             </div>
@@ -30,7 +30,7 @@ export default function ProductsBar({ ingredients = {} }) {
             <progress 
               value={amount} 
               max={50} 
-              style={{ width: "100%", height: "10px" }}
+              style={{ width: "100%", height: "10px"}}
             />
           </div>
         );

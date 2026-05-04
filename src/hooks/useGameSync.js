@@ -1,47 +1,88 @@
-import { useEffect } from "react";
-import { db } from "../services/firebase";
+import { useEffect, useRef } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { db } from "../services/firebase"; // Путь к твоему конфигу firebase
 
-export function useGameSync(user, money, level, count, setMoney, setLevel, setCount, total, setTotal) {
-  // Загрузка данных при входе
+export function useGameSync(
+  user, money, level, count, total, ingredients, upgrades, cookingTime, menu,
+  setMoney, setLevel, setCount, setTotal, setIngredients, setUpgrades, setCookingTime, setMenu
+) {
+  const isInitialLoad = useRef(true);
+
+  // 1. Загрузка данных при входе
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user) return;
 
-    const fetchData = async () => {
+    const loadData = async () => {
       const docRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setCount(data.count || 0);
-        setLevel(data.level || 1);
+        
+        // Установка базовых стейтов
         setMoney(data.money || 0);
-        setTotal(data.total || 0)
+        setLevel(data.level || 1);
+        setCount(data.count || 0);
+        setTotal(data.total || 0);
+        setIngredients(data.ingredients || { chicken: 0, vegetables: 0, sauce: 0 });
+        setUpgrades(data.upgrades || []);
+        setCookingTime(data.cookingTime || 10000);
+
+        // Проверка меню для СТАРОГО игрока
+        if (!data.menu || data.menu.length === 0) {
+          const fallbackMenu = [
+            { id: 1, name: "Классическая шаурма", price: 150, recipe: { chicken: 1, vegetables: 1, sauce: 1 }, unlocked: true },
+            { id: 2, name: "Сырная шаурма", price: 180, recipe: { chicken: 1, vegetables: 0, sauce: 2 }, unlocked: true },
+            { id: 3, name: "Острая (Диабло)", price: 200, recipe: { chicken: 1, vegetables: 1, sauce: 2 }, unlocked: true },
+            { id: 4, name: "Вегетарианская", price: 130, recipe: { chicken: 0, vegetables: 3, sauce: 1 }, unlocked: true },
+            { id: 5, name: "Царская (XXL)", price: 350, recipe: { chicken: 3, vegetables: 2, sauce: 2 }, unlocked: true }
+          ];
+
+          await updateDoc(docRef, { menu: fallbackMenu });
+          setMenu(fallbackMenu);
+        } else {
+          setMenu(data.menu);
+        }
       } else {
-        await setDoc(docRef, { count: 0, level: 1, money: 0 });
+        // Логика для НОВОГО игрока
+        const initialMenu = [
+          { id: 1, name: "Классическая шаурма", price: 150, recipe: { chicken: 1, vegetables: 1, sauce: 1 }, unlocked: true },
+          { id: 2, name: "Сырная шаурма", price: 180, recipe: { chicken: 1, vegetables: 0, sauce: 2 }, unlocked: true },
+          { id: 3, name: "Острая (Диабло)", price: 200, recipe: { chicken: 1, vegetables: 1, sauce: 2 }, unlocked: true },
+          { id: 4, name: "Вегетарианская", price: 130, recipe: { chicken: 0, vegetables: 3, sauce: 1 }, unlocked: true },
+          { id: 5, name: "Царская (XXL)", price: 350, recipe: { chicken: 3, vegetables: 2, sauce: 2 }, unlocked: true }
+        ];
+
+        await setDoc(docRef, {
+          money: 0,
+          level: 1,
+          count: 0,
+          total: 0,
+          ingredients: { chicken: 5, vegetables: 5, sauce: 5 },
+          upgrades: [],
+          cookingTime: 10000,
+          menu: initialMenu
+        });
+        setMenu(initialMenu);
       }
+      isInitialLoad.current = false;
     };
-    fetchData();
-  },[user?.uid, setCount, setLevel, setMoney]); // Сработает один раз при логине
 
-  // Авто-сохранение (Debounce)
+    loadData();
+  }, [user]);
+
+  // 2. Сохранение данных при изменениях (Debounce)
   useEffect(() => {
-    if (!user?.uid) return;
+    if (isInitialLoad.current || !user) return;
 
-    const timeoutId = setTimeout(() => {
-      const dataToSave = {
-        money: Number(money),
-        count: Number(count),
-        level: Number(level),
-        total: Number(total)
-      };
-
+    const timer = setTimeout(async () => {
       const docRef = doc(db, "users", user.uid);
-      updateDoc(docRef, dataToSave)
-        .then(() => console.log("Данные повара в облаке! ✨"))
-        .catch((e) => console.error("Ошибка синхронизации:", e));
-    }, 2000); 
+      await updateDoc(docRef, {
+        money, level, count, total, ingredients, upgrades, cookingTime, menu
+      });
+      console.log("Данные Shawarma Master синхронизированы");
+    }, 2000);
 
-    return () => clearTimeout(timeoutId);
-  }, [money, count, level, user?.uid, setMoney, setCount, setLevel]);
+    return () => clearTimeout(timer);
+  }, [money, level, count, total, ingredients, upgrades, cookingTime, menu, user]);
 }

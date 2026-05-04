@@ -1,9 +1,9 @@
 // Конфиг уровней (Квесты)
 export const LEVEL_REQUIREMENTS = {
     1: { money: 3500, count: 15, title: "Уличный лоток", reward: "Разблокирован соус 'Секрет шефа'" },
-    2: { money: 2000, count: 50, title: "Уютный киоск", reward: "Новый вид: Сырная шаурма" },
-    3: { money: 5000, count: 120, title: "Мастер точки", reward: "Разблокирован найм помощника" },
-    4: { money: 12000, count: 300, title: "Шаурмичный барон", reward: "Гриль 'Vulkan 3000'" },
+    2: { money: 8000, count: 50, title: "Уютный киоск", reward: "Новый вид: Сырная шаурма" },
+    3: { money: 10000, count: 120, title: "Мастер точки", reward: "Разблокирован найм помощника" },
+    4: { money: 15000, count: 300, title: "Шаурмичный барон", reward: "Гриль 'Vulkan 3000'" },
     5: { money: 25000, count: 700, title: "Бизнесмен", reward: "Новый вид: Веган-ролл" },
     6: { money: 45000, count: 1500, title: "Король района", reward: "Авто-упаковщик" },
     7: { money: 75000, count: 3500, title: "Легенда города", reward: "Франшиза" },
@@ -40,7 +40,7 @@ export const LEVEL_REQUIREMENTS = {
       cost: 800,
       type: "price",
       value: 50, // +50 сом к цене
-      description: "Люди обожают сыр!",
+      description: "Люди обожают сыр! Ваши клиенты будут отдавать на 50 больше за ваш шедевр!",
       minLevel: 2
     },
     {
