@@ -12,6 +12,7 @@ import ProductsBar from "./components/products_bar/ProductsBar.jsx";
 import LevelUpPanel from "./components/LevelUpPanel/LevelUpPanel.jsx";
 import UpgradesList from "./components/upGrades/upGrades.jsx";
 import MenuTable from "./components/MenuTable/MenuTable.jsx"
+import Header from "./components/header/header.jsx";
 
 // Константы
 import { playerProgress } from "./constants/playerProgress.js";
@@ -102,10 +103,10 @@ export default function Game({ user }) {
         ID ПОВАРА: {user.uid.slice(0, 8)} | {user.email}
       </p>
 
-      <MoneyCounter money={money} />
-      <ShawarmaCounter count={total} />
       
-      <LevelUpPanel
+      
+      <Header 
+        user={user}
         money={money}
         total={total}
         level={level}
