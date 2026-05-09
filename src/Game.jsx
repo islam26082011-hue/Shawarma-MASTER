@@ -1,116 +1,153 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCustomerFlow } from "./hooks/useCustomerFlow";
 import { useGameSync } from "./hooks/useGameSync";
 
-// Компоненты UI
 import Market from "./components/market/market.jsx";
 import Button from "./components/button/button.jsx";
-import MoneyCounter from "./components/money_counter/MoneyCounter.jsx";
-import ShawarmaCounter from "./components/shawarma_counter/ShawarmaCounter.jsx";
 import Window from "./components/window/window.jsx";
 import ProductsBar from "./components/products_bar/ProductsBar.jsx";
 import LevelUpPanel from "./components/LevelUpPanel/LevelUpPanel.jsx";
 import UpgradesList from "./components/upGrades/upGrades.jsx";
-import MenuTable from "./components/MenuTable/MenuTable.jsx"
+import MenuTable from "./components/MenuTable/MenuTable.jsx";
 import Header from "./components/header/header.jsx";
 
-// Константы
 import { playerProgress } from "./constants/playerProgress.js";
 import { LEVEL_REQUIREMENTS } from "./constants/upgrades.js";
 
 export default function Game({ user }) {
-  // --- Состояние игры ---
   const [upgrades, setUpgrades] = useState([]);
-  const [count, setCount] = useState(0); // Готовая шаурма на руках
+  const [count, setCount] = useState(0);
   const [level, setLevel] = useState(1);
   const [money, setMoney] = useState(0);
-  const [total, setTotal] = useState(0); // Всего продано за все время
+  const [total, setTotal] = useState(0);
   const [ingredients, setIngredients] = useState(playerProgress.ingredients);
   const [isCooking, setIsCooking] = useState(false);
   const [cookingTime, setCookingTime] = useState(10000);
-  const [menu, setMenu] = useState([]); // Меню загружается из Firebase
+  const [menu, setMenu] = useState([]);
 
-  // --- Синхронизация с Firebase ---
+  // Множитель дохода (апгрейд marketing_campaign)
+  const [moneyMultiplier, setMoneyMultiplier] = useState(1);
+
+  // Стажёр: ref чтобы интервал не пересоздавался лишний раз
+  const apprenticeRef = useRef(null);
+
   useGameSync(
     user, money, level, count, total, ingredients, upgrades, cookingTime, menu,
     setMoney, setLevel, setCount, setTotal, setIngredients, setUpgrades, setCookingTime, setMenu
   );
 
-  // --- Логика покупателей ---
+  // Пересчитываем множитель при загрузке апгрейдов из Firebase
+  useEffect(() => {
+    if (upgrades.includes("marketing_campaign")) {
+      setMoneyMultiplier(2);
+    }
+  }, [upgrades]);
+
+  // Стажёр: автоматически готовит шаурму каждые 5 секунд
+  useEffect(() => {
+    const hasApprentice = upgrades.includes("apprentice");
+
+    if (hasApprentice) {
+      apprenticeRef.current = setInterval(() => {
+        setCount(prev => {
+          // Не накапливаем — стажёр делает одну шаурму, если нет готовой
+          if (prev > 0) return prev;
+          return 1;
+        });
+      }, 5000);
+    }
+
+    return () => {
+      if (apprenticeRef.current) clearInterval(apprenticeRef.current);
+    };
+  }, [upgrades]);
+
+  // Меню с учётом priceBonus (апгрейды цен)
+  // Покупатели платят по этой цене, прайс-лист показывает эту цену
+  const effectiveMenu = menu.map(item => ({
+    ...item,
+    price: item.price + (item.priceBonus || 0),
+  }));
+
   const { currentCustomer, isSelling, markShawarmaReady } = useCustomerFlow(
     count,
     setCount,
     level,
     setMoney,
     setTotal,
-    menu
+    effectiveMenu,    // передаём меню с реальными ценами
+    moneyMultiplier,  // передаём множитель
   );
 
-  // --- Обработка апгрейдов ---
+  // --- Апгрейды ---
   const handleBuyUpgrade = (upgrade) => {
     const isBought = upgrades.includes(upgrade.id);
     const canAfford = money >= upgrade.cost;
     const isLevelMet = level >= upgrade.minLevel;
 
-    if (!isBought && canAfford && isLevelMet) {
-      setMoney((prev) => prev - upgrade.cost);
-      setUpgrades((prev) => [...prev, upgrade.id]);
+    if (isBought || !canAfford || !isLevelMet) return;
 
-      // Если апгрейд влияет на цену блюд в меню
-      if (upgrade.type === "price") {
-        setMenu((prevMenu) =>
-          prevMenu.map((item) => {
-            // Специфический апгрейд: Сырный соус только для Сырной шаурмы (id: 2)
-            if (upgrade.id === "cheese_sauce" && item.id === 2) {
-              return { ...item, price: item.price + upgrade.value };
-            }
-            // Глобальный апгрейд: Мраморное мясо влияет на все позиции
-            if (upgrade.id === "premium_meat" || upgrade.id === "molecular_kitchen") {
-              return { ...item, price: item.price + upgrade.value };
-            }
-            return item;
-          })
-        );
-      }
+    setMoney(prev => prev - upgrade.cost);
+    setUpgrades(prev => [...prev, upgrade.id]);
 
-      // Если апгрейд влияет на скорость (уменьшает время готовки)
-      if (upgrade.type === "speed") {
-        setCookingTime((prev) => Math.max(1000, prev - upgrade.value));
-      }
+    if (upgrade.type === "price") {
+      // Сохраняем бонус отдельно (priceBonus), не трогаем базовую price из menu.js
+      setMenu(prevMenu =>
+        prevMenu.map(item => {
+          if (upgrade.id === "cheese_sauce" && item.id === 2) {
+            return { ...item, priceBonus: (item.priceBonus || 0) + upgrade.value };
+          }
+          if (upgrade.id === "premium_meat" || upgrade.id === "molecular_kitchen") {
+            return { ...item, priceBonus: (item.priceBonus || 0) + upgrade.value };
+          }
+          return item;
+        })
+      );
     }
+
+    if (upgrade.type === "speed") {
+      setCookingTime(prev => Math.max(1000, prev - upgrade.value));
+    }
+
+    if (upgrade.type === "multiplier") {
+      setMoneyMultiplier(prev => prev * upgrade.value);
+    }
+
+    // "idle" (apprentice) — обрабатывается через useEffect выше
   };
 
-  // --- Логика уровней ---
+  // --- Уровни ---
   const currentReq = LEVEL_REQUIREMENTS[level];
-  const canLevelUp = currentReq 
-    ? money >= currentReq.money && total >= currentReq.count 
+  const canLevelUp = currentReq
+    ? money >= currentReq.money && total >= currentReq.count
     : false;
 
   const handleLevelUp = () => {
-    if (canLevelUp) {
-      setLevel((p) => {
-        const nextLevel = p + 1;
-        // Разблокировка новых рецептов при достижении уровней
-        if (nextLevel === 2) {
-          setMenu(prev => prev.map(item => item.id === 2 ? { ...item, unlocked: true } : item));
-        }
-        if (nextLevel === 3) {
-          setMenu(prev => prev.map(item => item.id === 3 ? { ...item, unlocked: true } : item));
-        }
-        return nextLevel;
-      });
-    }
+    if (!canLevelUp) return;
+
+    setLevel(prev => {
+      const nextLevel = prev + 1;
+
+      // Разблокируем рецепты по уровню
+      setMenu(prevMenu =>
+        prevMenu.map(item =>
+          item.unlocksAtLevel <= nextLevel
+            ? { ...item, unlocked: true }
+            : item
+        )
+      );
+
+      return nextLevel;
+    });
   };
-  console.log(menu)
+
   return (
     <div className="game-screen" style={{ color: "#fff", fontFamily: "monospace" }}>
       <p style={{ fontSize: "10px", color: "#bc13fe", opacity: 0.7 }}>
         ID ПОВАРА: {user.uid.slice(0, 8)} | {user.email}
       </p>
 
-      
-      
-      <Header 
+      <Header
         user={user}
         money={money}
         total={total}
@@ -122,7 +159,7 @@ export default function Game({ user }) {
 
       <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", marginTop: "20px" }}>
         <div style={{ flex: 1 }}>
-        <Button
+          <Button
             isCooking={isCooking}
             setIsCooking={setIsCooking}
             isSelling={isSelling}
@@ -136,16 +173,18 @@ export default function Game({ user }) {
             onShawarmaReady={markShawarmaReady}
             style={{ "--cooking-time": `${cookingTime}ms` }}
           />
-          
+
           <Window currentCustomer={currentCustomer} hidden={!currentCustomer} />
-          
+
           <Market
             money={money}
             setMoney={setMoney}
             ingredients={ingredients}
             setIngredients={setIngredients}
           />
-          <MenuTable menu={menu} upgrades={upgrades} />
+
+          {/* Прайс-лист показывает effectiveMenu (с бонусами апгрейдов) */}
+          <MenuTable menu={effectiveMenu} upgrades={upgrades} />
         </div>
 
         <div style={{ width: "300px" }}>

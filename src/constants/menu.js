@@ -2,36 +2,46 @@ export const menuData = [
   {
     id: 1,
     name: "Классическая шаурма",
-    price: 200,
+    price: 220,
     recipe: { chicken: 1, vegetables: 1, sauce: 1 },
-    description: "Курица, капуста, огурцы, помидоры, фирменный соус."
+    description: "Курица, капуста, огурцы, помидоры, фирменный соус.",
+    unlocked: true,       // Доступна с самого начала
+    unlocksAtLevel: 1,
   },
   {
     id: 2,
     name: "Сырная шаурма",
-    price: 180,
-    recipe: { chicken: 1, vegetables: 0, sauce: 2 }, // Сырную считаем через соус или добавь 'cheese'
-    description: "Много сыра, сырный соус и хрустящий лаваш."
+    price: 200,
+    recipe: { chicken: 1, vegetables: 0, sauce: 2 },
+    description: "Много сыра, сырный соус и хрустящий лаваш.",
+    unlocked: false,
+    unlocksAtLevel: 2,
   },
   {
     id: 3,
     name: "Острая (Диабло)",
-    price: 280,
+    price: 300,
     recipe: { chicken: 1, vegetables: 1, sauce: 2 },
-    description: "Перец халапеньо, острый соус и маринованный лук."
+    description: "Перец халапеньо, острый соус и маринованный лук.",
+    unlocked: false,
+    unlocksAtLevel: 3,
   },
   {
     id: 4,
     name: "Вегетарианская",
-    price: 130,
+    price: 150,
     recipe: { chicken: 0, vegetables: 3, sauce: 1 },
-    description: "Много овощей, без мяса, с фалафелем."
+    description: "Много овощей, без мяса, с фалафелем.",
+    unlocked: false,
+    unlocksAtLevel: 4,
   },
   {
     id: 5,
     name: "Царская (XXL)",
-    price: 370,
+    price: 390,
     recipe: { chicken: 3, vegetables: 2, sauce: 2 },
-    description: "Двойная порция мяса, картофель фри внутри, огромный размер."
-  }
+    description: "Двойная порция мяса, картофель фри внутри, огромный размер.",
+    unlocked: false,
+    unlocksAtLevel: 5,
+  },
 ];

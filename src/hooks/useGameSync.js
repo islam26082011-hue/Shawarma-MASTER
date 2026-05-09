@@ -1,6 +1,29 @@
 import { useEffect, useRef } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { db } from "../services/firebase"; // Путь к твоему конфигу firebase
+import { db } from "../services/firebase";
+import { menuData } from "../constants/menu.js";
+
+// Строим начальное меню всегда из единственного источника правды — menu.js
+function buildInitialMenu() {
+  return menuData.map(item => ({ ...item }));
+}
+
+// Мигрируем сохранённое меню: обновляем цены и рецепты из menu.js,
+// но сохраняем флаг unlocked и прибавки от апгрейдов (priceBonus).
+function migrateMenu(savedMenu) {
+  return menuData.map(menuItem => {
+    const saved = savedMenu.find(s => s.id === menuItem.id);
+    if (!saved) {
+      // Новый пункт появился в menu.js — добавляем его
+      return { ...menuItem };
+    }
+    return {
+      ...menuItem,                              // базовые данные из menu.js (цена, рецепт, название)
+      unlocked: saved.unlocked ?? menuItem.unlocked,
+      priceBonus: saved.priceBonus ?? 0,        // накопленные бонусы от апгрейдов
+    };
+  });
+}
 
 export function useGameSync(
   user, money, level, count, total, ingredients, upgrades, cookingTime, menu,
@@ -18,43 +41,25 @@ export function useGameSync(
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        
-        // Установка базовых стейтов
+
         setMoney(data.money || 0);
         setLevel(data.level || 1);
-        // count намеренно сбрасываем в 0: шаурма на руках не переживает перезагрузку.
-        // Это предотвращает баг, когда count=1 из Firebase сразу триггерит продажу
-        // при появлении первого покупателя, вызывая мгновенный isSelling=true.
-        setCount(0);
+        setCount(0); // шаурма на руках не переживает перезагрузку
         setTotal(data.total || 0);
         setIngredients(data.ingredients || { chicken: 0, vegetables: 0, sauce: 0 });
         setUpgrades(data.upgrades || []);
         setCookingTime(data.cookingTime || 10000);
 
-        // Проверка меню для СТАРОГО игрока
-        if (!data.menu || data.menu.length === 0) {
-          const fallbackMenu = [
-            { id: 1, name: "Классическая шаурма", price: 150, recipe: { chicken: 1, vegetables: 1, sauce: 1 }, unlocked: true },
-            { id: 2, name: "Сырная шаурма", price: 180, recipe: { chicken: 1, vegetables: 0, sauce: 2 }, unlocked: true },
-            { id: 3, name: "Острая (Диабло)", price: 200, recipe: { chicken: 1, vegetables: 1, sauce: 2 }, unlocked: true },
-            { id: 4, name: "Вегетарианская", price: 130, recipe: { chicken: 0, vegetables: 3, sauce: 1 }, unlocked: true },
-            { id: 5, name: "Царская (XXL)", price: 350, recipe: { chicken: 3, vegetables: 2, sauce: 2 }, unlocked: true }
-          ];
+        // Мигрируем меню: цены всегда из menu.js, unlocked и priceBonus — из сохранения
+        const migratedMenu = migrateMenu(data.menu || []);
+        setMenu(migratedMenu);
 
-          await updateDoc(docRef, { menu: fallbackMenu });
-          setMenu(fallbackMenu);
-        } else {
-          setMenu(data.menu);
-        }
+        // Если меню изменилось после миграции — сохраняем обратно
+        await updateDoc(docRef, { menu: migratedMenu });
+
       } else {
-        // Логика для НОВОГО игрока
-        const initialMenu = [
-          { id: 1, name: "Классическая шаурма", price: 150, recipe: { chicken: 1, vegetables: 1, sauce: 1 }, unlocked: true },
-          { id: 2, name: "Сырная шаурма", price: 180, recipe: { chicken: 1, vegetables: 0, sauce: 2 }, unlocked: true },
-          { id: 3, name: "Острая (Диабло)", price: 200, recipe: { chicken: 1, vegetables: 1, sauce: 2 }, unlocked: true },
-          { id: 4, name: "Вегетарианская", price: 130, recipe: { chicken: 0, vegetables: 3, sauce: 1 }, unlocked: true },
-          { id: 5, name: "Царская (XXL)", price: 350, recipe: { chicken: 3, vegetables: 2, sauce: 2 }, unlocked: true }
-        ];
+        // Новый игрок — строим меню из menu.js
+        const initialMenu = buildInitialMenu();
 
         await setDoc(docRef, {
           money: 0,
@@ -64,26 +69,29 @@ export function useGameSync(
           ingredients: { chicken: 5, vegetables: 5, sauce: 5 },
           upgrades: [],
           cookingTime: 10000,
-          menu: initialMenu
+          menu: initialMenu,
         });
+
         setMenu(initialMenu);
+        setIngredients({ chicken: 5, vegetables: 5, sauce: 5 });
       }
+
       isInitialLoad.current = false;
     };
 
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // 2. Сохранение данных при изменениях (Debounce)
+  // 2. Сохранение при изменениях (debounce 2s)
   useEffect(() => {
     if (isInitialLoad.current || !user) return;
 
     const timer = setTimeout(async () => {
       const docRef = doc(db, "users", user.uid);
       await updateDoc(docRef, {
-        money, level, count, total, ingredients, upgrades, cookingTime, menu
+        money, level, count, total, ingredients, upgrades, cookingTime, menu,
       });
-      console.log("Данные Shawarma Master синхронизированы");
     }, 2000);
 
     return () => clearTimeout(timer);

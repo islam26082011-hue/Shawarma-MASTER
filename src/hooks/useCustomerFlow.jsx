@@ -7,7 +7,8 @@ export function useCustomerFlow(
   level,
   setMoney,
   setTotal,
-  menu
+  menu,
+  moneyMultiplier = 1,
 ) {
   const [currentCustomer, setCurrentCustomer] = useState(null);
   const [isSelling, setIsSelling] = useState(false);
@@ -76,7 +77,7 @@ export function useCustomerFlow(
     const customer = currentCustomerRef.current;
 
     sellTimerRef.current = setTimeout(() => {
-      setMoney(prev => prev + customer.order.price);
+      setMoney(prev => prev + Math.round(customer.order.price * moneyMultiplier));
       setTotal(prev => prev + 1);
       setCount(0);
       setCurrentCustomer(null);
@@ -90,7 +91,7 @@ export function useCustomerFlow(
       clearTimeout(sellTimerRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, setCount, setMoney, setTotal]);
+  }, [count, setCount, setMoney, setTotal, moneyMultiplier]);
 
   return {
     currentCustomer,
