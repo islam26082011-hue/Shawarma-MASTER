@@ -37,8 +37,13 @@ export default function Game({ user }) {
   );
 
   // --- Логика покупателей ---
-  const { currentCustomer } = useCustomerFlow(
-    count, setCount, level, setMoney, total, setTotal, menu
+  const { currentCustomer, isSelling, markShawarmaReady } = useCustomerFlow(
+    count,
+    setCount,
+    level,
+    setMoney,
+    setTotal,
+    menu
   );
 
   // --- Обработка апгрейдов ---
@@ -96,7 +101,7 @@ export default function Game({ user }) {
       });
     }
   };
-
+  console.log(menu)
   return (
     <div className="game-screen" style={{ color: "#fff", fontFamily: "monospace" }}>
       <p style={{ fontSize: "10px", color: "#bc13fe", opacity: 0.7 }}>
@@ -117,16 +122,18 @@ export default function Game({ user }) {
 
       <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", marginTop: "20px" }}>
         <div style={{ flex: 1 }}>
-          <Button
+        <Button
             isCooking={isCooking}
-            setCount={setCount}
-            setTotal={setTotal}
             setIsCooking={setIsCooking}
+            isSelling={isSelling}
+            count={count}
+            setCount={setCount}
             cookingTime={cookingTime}
             ingredients={ingredients}
             setIngredients={setIngredients}
             currentCustomer={currentCustomer}
             activeRecipe={currentCustomer?.order?.recipe}
+            onShawarmaReady={markShawarmaReady}
             style={{ "--cooking-time": `${cookingTime}ms` }}
           />
           

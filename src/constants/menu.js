@@ -2,7 +2,7 @@ export const menuData = [
   {
     id: 1,
     name: "Классическая шаурма",
-    price: 150,
+    price: 200,
     recipe: { chicken: 1, vegetables: 1, sauce: 1 },
     description: "Курица, капуста, огурцы, помидоры, фирменный соус."
   },
@@ -16,7 +16,7 @@ export const menuData = [
   {
     id: 3,
     name: "Острая (Диабло)",
-    price: 200,
+    price: 280,
     recipe: { chicken: 1, vegetables: 1, sauce: 2 },
     description: "Перец халапеньо, острый соус и маринованный лук."
   },
@@ -30,7 +30,7 @@ export const menuData = [
   {
     id: 5,
     name: "Царская (XXL)",
-    price: 350,
+    price: 370,
     recipe: { chicken: 3, vegetables: 2, sauce: 2 },
     description: "Двойная порция мяса, картофель фри внутри, огромный размер."
   }

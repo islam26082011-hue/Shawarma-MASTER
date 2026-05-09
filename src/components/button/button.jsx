@@ -1,17 +1,25 @@
 import "./button.css";
+
 export default function Button({
   isCooking,
   setIsCooking,
   cookingTime,
   setCount,
-  setTotal,
   ingredients,
   setIngredients,
-  activeRecipe, // Получаем рецепт текущего заказа
+  activeRecipe,
   style,
+  isSelling,       // true только во время анимации отдачи (700ms)
+  currentCustomer, // наличие покупателя
+  onShawarmaReady, // колбэк: сообщает хуку что шаурма приготовлена в этой сессии
 }) {
   function handleStartCooking() {
-    if (isCooking || !activeRecipe) return;
+    // Блокировка:
+    // 1. Если уже готовим
+    // 2. Если идёт анимация отдачи
+    // 3. Если нет покупателя
+    // 4. Если нет рецепта
+    if (isCooking || isSelling || !currentCustomer || !activeRecipe) return;
 
     // Проверяем, хватает ли продуктов
     const canCook = Object.keys(activeRecipe).every(
@@ -35,18 +43,21 @@ export default function Button({
     });
 
     setTimeout(() => {
-      setCount((prev) => prev + 1);
-      setTotal((prev) => prev + 1);
+      // Сначала сообщаем хуку что шаурма приготовлена в этой сессии
+      onShawarmaReady?.();
+      setCount(1);
       setIsCooking(false);
     }, cookingTime);
   }
+
+  // Кнопка заблокирована, если идет готовка, продажа или нет клиента
+  const isDisabled = isCooking || isSelling || !currentCustomer;
 
   return (
     <div
       className={`btn-container ${isCooking ? "is-loading" : ""}`}
       style={style}
     >
-      {/* Тот самый SVG прогресс-бар вокруг кнопки */}
       <svg className="progress-svg" width="120" height="120">
         <circle
           className="progress-circle"
@@ -54,7 +65,6 @@ export default function Button({
           cy="60"
           r="54"
           style={{
-            // Передаем время анимации в CSS
             animationDuration: isCooking ? `${cookingTime}ms` : "0s",
           }}
         />
@@ -63,10 +73,19 @@ export default function Button({
       <button
         className="btn"
         onClick={handleStartCooking}
-        disabled={isCooking || !activeRecipe}
+        disabled={isDisabled}
       >
-        {/* Если заказа нет, кнопка станет неактивной, если есть — покажет эмодзи */}
-        {isCooking ? "..." : activeRecipe ? "🌯" : "💤"}
+        {/* 1. Если жарим — точки */}
+        {isCooking
+          ? "..."
+          : /* 2. Если отдаём (анимация продажи) — галочка */
+          isSelling
+          ? "✅"
+          : /* 3. Если клиент есть и у него есть рецепт — шаурма */
+          activeRecipe
+          ? "🌯"
+          : /* 4. Во всех остальных случаях (ждём) — спим */
+            "💤"}
       </button>
     </div>
   );

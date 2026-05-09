@@ -22,7 +22,10 @@ export function useGameSync(
         // Установка базовых стейтов
         setMoney(data.money || 0);
         setLevel(data.level || 1);
-        setCount(data.count || 0);
+        // count намеренно сбрасываем в 0: шаурма на руках не переживает перезагрузку.
+        // Это предотвращает баг, когда count=1 из Firebase сразу триггерит продажу
+        // при появлении первого покупателя, вызывая мгновенный isSelling=true.
+        setCount(0);
         setTotal(data.total || 0);
         setIngredients(data.ingredients || { chicken: 0, vegetables: 0, sauce: 0 });
         setUpgrades(data.upgrades || []);

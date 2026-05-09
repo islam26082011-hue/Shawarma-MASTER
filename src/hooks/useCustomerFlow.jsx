@@ -1,60 +1,100 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { customersData } from "../constants/customers.js";
 
-export function useCustomerFlow(count, setCount, level, setMoney, total, setTotal, menu) {
+export function useCustomerFlow(
+  count,
+  setCount,
+  level,
+  setMoney,
+  setTotal,
+  menu
+) {
   const [currentCustomer, setCurrentCustomer] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSelling, setIsSelling] = useState(false);
 
-  // Логика появления покупателя
+  const spawnTimerRef = useRef(null);
+  const sellTimerRef = useRef(null);
+
+  // Ref-копии актуальных значений — чтобы таймер продажи
+  // всегда читал свежие данные, даже если deps изменились
+  const currentCustomerRef = useRef(null);
+  const isSellingRef = useRef(false);
+  const shawarmaReadyRef = useRef(false);
+
+  // Синхронизируем refs со state
+  currentCustomerRef.current = currentCustomer;
+  isSellingRef.current = isSelling;
+
+  const markShawarmaReady = useCallback(() => {
+    shawarmaReadyRef.current = true;
+  }, []);
+
+  // =========================
+  // СПАВН ПОКУПАТЕЛЯ
+  // =========================
   useEffect(() => {
-    // Ждем, пока загрузится меню и не будет активного процесса
-    if (currentCustomer || isProcessing || !menu || menu.length === 0) return;
+    if (currentCustomer) return;
+    if (isSelling) return;
+    if (!menu || menu.length === 0) return;
+
+    const availableMenu = menu.filter(item => item.unlocked);
+    if (availableMenu.length === 0) return;
 
     const spawnDelay = Math.max(1000, 5000 - level * 400);
 
-    const timer = setTimeout(() => {
-      // Фильтруем меню: приходят только за тем, что разблокировано
-      const availableMenu = menu.filter(item => item.unlocked);
-      if (availableMenu.length === 0) return;
+    spawnTimerRef.current = setTimeout(() => {
+      const randomCustomer =
+        customersData[Math.floor(Math.random() * customersData.length)];
+      const randomOrder =
+        availableMenu[Math.floor(Math.random() * availableMenu.length)];
 
-      const randomCustomer = customersData[Math.floor(Math.random() * customersData.length)];
-      const randomOrder = availableMenu[Math.floor(Math.random() * availableMenu.length)];
-
-      setCurrentCustomer({
-        ...randomCustomer,
-        order: { ...randomOrder } // Копируем объект заказа
-      });
+      setCurrentCustomer({ ...randomCustomer, order: randomOrder });
     }, spawnDelay);
 
-    return () => clearTimeout(timer);
-  }, [currentCustomer, isProcessing, level, menu]);
+    return () => clearTimeout(spawnTimerRef.current);
+  }, [currentCustomer, isSelling, level, menu]);
 
-  // Логика автоматической продажи, если есть готовая шаурма
+  // =========================
+  // ПРОДАЖА
+  // =========================
+  // Следим ТОЛЬКО за count и shawarmaReadyRef.
+  // isSelling намеренно НЕ в deps — чтобы React не перезапускал
+  // этот эффект (и не отменял таймер) когда мы сами ставим isSelling=true.
   useEffect(() => {
-    if (currentCustomer && count > 0 && !isProcessing) {
-      
-      // Используем таймер с нулевой задержкой, чтобы убрать ошибку ESLint
-      const startTimer = setTimeout(() => {
-        setIsProcessing(true);
+    if (count <= 0) return;
+    if (!shawarmaReadyRef.current) return;
 
-        // Таймер самой "продажи"
-        const processTimer = setTimeout(() => {
-          const price = currentCustomer.order.price;
+    // Читаем актуальное значение через ref, не через замыкание
+    if (isSellingRef.current) return;
+    if (!currentCustomerRef.current) return;
 
-          setMoney(prev => prev + price);
-          setCount(prev => prev - 1);
-          
-          
-          setCurrentCustomer(null);
-          setIsProcessing(false);
-        }, 1500);
+    shawarmaReadyRef.current = false;
+    setIsSelling(true);
+    isSellingRef.current = true;
 
-        return () => clearTimeout(processTimer);
-      }, 0); 
+    // Захватываем покупателя через ref — он не протухнет
+    const customer = currentCustomerRef.current;
 
-      return () => clearTimeout(startTimer);
-    }
-  }, [currentCustomer, count, isProcessing, setMoney, setCount, setTotal]);
+    sellTimerRef.current = setTimeout(() => {
+      setMoney(prev => prev + customer.order.price);
+      setTotal(prev => prev + 1);
+      setCount(0);
+      setCurrentCustomer(null);
+      setIsSelling(false);
+      isSellingRef.current = false;
+    }, 700);
 
-  return { currentCustomer };
+    // Cleanup НЕ отменяет таймер — он должен завершиться.
+    // Отменяем только если компонент размонтируется.
+    return () => {
+      clearTimeout(sellTimerRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count, setCount, setMoney, setTotal]);
+
+  return {
+    currentCustomer,
+    isSelling,
+    markShawarmaReady,
+  };
 }

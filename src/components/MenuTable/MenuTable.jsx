@@ -4,11 +4,11 @@ import { SHOP_UPGRADES } from "../../constants/upgrades";
 export default function MenuTable({ menu, upgrades }) {
   // Базовые цены (можешь вынести в константы)
   const basePrices = {
-    1: 150, // Классика
+    1: 200, // Классика
     2: 180, // Сырная
-    3: 200, // Острая
+    3: 280, // Острая
     4: 130, // Вего
-    5: 350  // XXL
+    5: 370  // XXL
   };
 
   return (
