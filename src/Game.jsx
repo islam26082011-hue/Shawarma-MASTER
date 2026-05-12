@@ -10,6 +10,7 @@ import LevelUpPanel from "./components/LevelUpPanel/LevelUpPanel.jsx";
 import UpgradesList from "./components/upGrades/upGrades.jsx";
 import MenuTable from "./components/MenuTable/MenuTable.jsx";
 import Header from "./components/header/header.jsx";
+import Apprentice from "./components/apprentice/Apprentice.jsx";
 
 import { playerProgress } from "./constants/playerProgress.js";
 import { LEVEL_REQUIREMENTS } from "./constants/upgrades.js";
@@ -30,6 +31,7 @@ export default function Game({ user }) {
 
   // Стажёр: ref чтобы интервал не пересоздавался лишний раз
   const apprenticeRef = useRef(null);
+  const superMixMasterRef = useRef(null);
 
   useGameSync(
     user, money, level, count, total, ingredients, upgrades, cookingTime, menu,
@@ -43,24 +45,40 @@ export default function Game({ user }) {
     }
   }, [upgrades]);
 
-  // Стажёр: автоматически готовит шаурму каждые 5 секунд
+  // Стажёр: приносит 500 сом каждые 15 секунд
   useEffect(() => {
     const hasApprentice = upgrades.includes("apprentice");
 
     if (hasApprentice) {
       apprenticeRef.current = setInterval(() => {
-        setCount(prev => {
-          // Не накапливаем — стажёр делает одну шаурму, если нет готовой
-          if (prev > 0) return prev;
-          return 1;
-        });
-      }, 5000);
+        const apprenticeIncome = 500;
+        setMoney(prev => prev + (apprenticeIncome * moneyMultiplier));
+        setTotal(prev => prev + 1); // Считаем как одну продажу
+      }, 15000); // 15 секунд
     }
 
     return () => {
       if (apprenticeRef.current) clearInterval(apprenticeRef.current);
     };
-  }, [upgrades]);
+  }, [upgrades, moneyMultiplier]);
+
+  // Мастер Super mix: автоматически производит Super mix за 500 каждые 3 секунды
+  useEffect(() => {
+    const hasSuperMixMaster = upgrades.includes("super_mix_master");
+
+    if (hasSuperMixMaster) {
+      superMixMasterRef.current = setInterval(() => {
+        // Добавляем 500 сом каждые 3 секунды (цена Super mix)
+        const superMixPrice = 500;
+        setMoney(prev => prev + (superMixPrice * moneyMultiplier));
+        setTotal(prev => prev + 1);
+      }, 3000);
+    }
+
+    return () => {
+      if (superMixMasterRef.current) clearInterval(superMixMasterRef.current);
+    };
+  }, [upgrades, moneyMultiplier]);
 
   // Меню с учётом priceBonus (апгрейды цен)
   // Покупатели платят по этой цене, прайс-лист показывает эту цену
@@ -185,6 +203,9 @@ export default function Game({ user }) {
 
           {/* Прайс-лист показывает effectiveMenu (с бонусами апгрейдов) */}
           <MenuTable menu={effectiveMenu} upgrades={upgrades} />
+
+          {/* Компонент Стажера с прогресс-баром */}
+          <Apprentice hasApprentice={upgrades.includes("apprentice")} />
         </div>
 
         <div style={{ width: "300px" }}>

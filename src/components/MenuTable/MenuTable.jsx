@@ -2,13 +2,13 @@ import React from "react";
 import { SHOP_UPGRADES } from "../../constants/upgrades";
 
 export default function MenuTable({ menu, upgrades }) {
-  // Базовые цены (можешь вынести в константы)
+  // Базовые цены (из menu.js)
   const basePrices = {
-    1: 200, // Классика
-    2: 180, // Сырная
-    3: 280, // Острая
-    4: 130, // Вего
-    5: 370  // XXL
+    1: 220, // Классика
+    2: 200, // Сырная
+    3: 300, // Острая
+    4: 150, // Вего
+    5: 390  // XXL
   };
 
   return (
