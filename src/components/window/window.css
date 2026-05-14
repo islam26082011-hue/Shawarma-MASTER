@@ -1,0 +1,42 @@
+.window {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgb(123 123 123 / 90%);
+  border-radius: 15px;
+  border: 1px solid #bc13fe;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 200px;
+}
+
+.window.hidden {
+  display: none;
+}
+
+.window .dialog-bubble {
+  color: #000000;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 15px;
+  border-radius: 10px;
+  max-width: 300px;
+  text-align: center;
+  margin: 15px 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.window .order-info {
+  color: #000000;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.window .order-info strong {
+  font-weight: bold;
+}
+
+.window .waiting-text {
+  color: #bc13fe;
+  font-size: 14px;
+}

@@ -44,13 +44,4 @@ export const menuData = [
     unlocked: false,
     unlocksAtLevel: 5,
   },
-  {
-    id: 6,
-    name: "Super mix",
-    price: 500,
-    recipe: { chicken: 0, vegetables: 0, sauce: 0 },
-    description: "Тайный рецепт - абсолютный хит!",
-    unlocked: false,
-    unlocksAtLevel: 7,
-  },
 ];

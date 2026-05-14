@@ -6,7 +6,7 @@ export const LEVEL_REQUIREMENTS = {
     4: { money: 15000, count: 300, title: "Шаурмичный барон", reward: "Разблокирована Вегетарианская шаурма" },
     5: { money: 25000, count: 700, title: "Бизнесмен", reward: "Разблокирована Царская (XXL) шаурма" },
     6: { money: 45000, count: 1500, title: "Король района", reward: "Разблокирован апгрейд 'Мраморная говядина'" },
-    7: { money: 75000, count: 3500, title: "Легенда города", reward: "Разблокирована Super mix & Мастер Super mix" },
+    7: { money: 75000, count: 3500, title: "Легенда города", reward: "Разблокированы эндгейм апгрейды" },
     8: { money: 120000, count: 8000, title: "Шаурма-Империя", reward: "Эндгейм апгрейды разблокированы" },
     9: { money: 250000, count: 20000, title: "Global Shawarma CEO", reward: "✨ Ты покорил мир шауармы!" }
   };
@@ -62,15 +62,6 @@ export const LEVEL_REQUIREMENTS = {
       value: 500, // 500 сом каждые 15 секунд
       description: "Работает в твоей лавке. Каждые 15 секунд приносит 500 сом.",
       minLevel: 3
-    },
-    {
-      id: "super_mix_master",
-      name: "Мастер Super mix",
-      cost: 25000,
-      type: "idle_super",
-      value: 6, // Производит Super mix (id: 6)
-      description: "Мастер-шефа, знает только Super mix. Производит за 500 сом каждые 3 секунды.",
-      minLevel: 7
     },
   
     // ЖИРНЫЕ АПГРЕЙДЫ (Эндгейм)

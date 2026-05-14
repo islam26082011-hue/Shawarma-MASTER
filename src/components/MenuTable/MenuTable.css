@@ -1,0 +1,68 @@
+.menu-table-container {
+  padding: 20px;
+  background: rgba(10, 10, 10, 0.9);
+  border-radius: 15px;
+  border: 1px solid #bc13fe;
+  margin-top: 20px;
+  font-family: monospace;
+}
+
+.menu-table-container h2 {
+  color: #bc13fe;
+  font-size: 18px;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+}
+
+.menu-table-container table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #fff;
+}
+
+.menu-table-container thead tr {
+  border-bottom: 2px solid #bc13fe;
+  text-align: left;
+}
+
+.menu-table-container th {
+  padding: 10px;
+  color: #bc13fe;
+}
+
+.menu-table-container tbody tr {
+  border-bottom: 1px solid #333;
+  transition: all 0.3s ease;
+}
+
+.menu-table-container tbody tr.locked {
+  opacity: 0.3;
+}
+
+.menu-table-container tbody tr.unlocked {
+  opacity: 1;
+}
+
+.menu-table-container td {
+  padding: 12px;
+}
+
+.menu-table-container td.dish-name {
+  font-weight: bold;
+}
+
+.menu-table-container td.upgrade-bonus {
+  color: #00ff88;
+}
+
+.menu-table-container td.total-price {
+  color: #bc13fe;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.menu-table-container .disclaimer {
+  margin-top: 15px;
+  font-size: 10px;
+  color: #666;
+}

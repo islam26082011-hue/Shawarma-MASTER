@@ -1,0 +1,47 @@
+.market {
+  margin-top: 20px;
+  border: 1px solid #bc13fe;
+  padding: 15px;
+  border-radius: 12px;
+  background: rgba(188, 19, 254, 0.05);
+}
+
+.market h3 {
+  color: #bc13fe;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.market-buttons-container {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.market-btn {
+  padding: 8px 12px;
+  border: 1px solid #bc13fe;
+  border-radius: 8px;
+  background: transparent;
+  color: black;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.market-btn:hover:not(:disabled) {
+  background: rgba(188, 19, 254, 0.1);
+  box-shadow: 0 0 10px rgba(188, 19, 254, 0.3);
+}
+
+.market-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #ccc;
+  color: #666;
+  border-color: #999;
+}
+
+.market-btn.full {
+  opacity: 0.5;
+}

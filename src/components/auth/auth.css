@@ -1,0 +1,45 @@
+.auth-container {
+  padding: 20px;
+  color: violet;
+}
+
+.auth-container h2 {
+  margin-bottom: 20px;
+}
+
+.auth-container input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.auth-container button {
+  width: 100%;
+  padding: 10px;
+  background: violet;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.auth-container button:hover {
+  opacity: 0.9;
+}
+
+.auth-container .toggle-text {
+  cursor: pointer;
+  margin-top: 15px;
+  color: violet;
+  text-decoration: underline;
+}
+
+.auth-container .toggle-text:hover {
+  opacity: 0.8;
+}

@@ -1,5 +1,6 @@
 import React from "react";
 import { SHOP_UPGRADES } from "../../constants/upgrades";
+import "./MenuTable.css";
 
 export default function MenuTable({ menu, upgrades }) {
   // Базовые цены (из menu.js)
@@ -12,25 +13,16 @@ export default function MenuTable({ menu, upgrades }) {
   };
 
   return (
-    <div style={{
-      padding: "20px",
-      background: "rgba(10, 10, 10, 0.9)",
-      borderRadius: "15px",
-      border: "1px solid #bc13fe",
-      marginTop: "20px",
-      fontFamily: "monospace"
-    }}>
-      <h2 style={{ color: "#bc13fe", fontSize: "18px", textTransform: "uppercase", marginBottom: "15px" }}>
-        Прайс-лист заведения
-      </h2>
+    <div className="menu-table-container">
+      <h2>Прайс-лист заведения</h2>
       
-      <table style={{ width: "100%", borderCollapse: "collapse", color: "#fff" }}>
+      <table>
         <thead>
-          <tr style={{ borderBottom: "2px solid #bc13fe", textAlign: "left" }}>
-            <th style={{ padding: "10px", color: "#bc13fe" }}>Блюдо</th>
-            <th style={{ padding: "10px", color: "#bc13fe" }}>База</th>
-            <th style={{ padding: "10px", color: "#bc13fe" }}>Апгрейды</th>
-            <th style={{ padding: "10px", color: "#bc13fe" }}>Итого</th>
+          <tr>
+            <th>Блюдо</th>
+            <th>База</th>
+            <th>Апгрейды</th>
+            <th>Итого</th>
           </tr>
         </thead>
         <tbody>
@@ -39,19 +31,15 @@ export default function MenuTable({ menu, upgrades }) {
             const upgradeBonus = item.price - basePrice;
 
             return (
-              <tr key={item.id} style={{ 
-                borderBottom: "1px solid #333", 
-                opacity: item.unlocked ? 1 : 0.3,
-                transition: "all 0.3s ease"
-              }}>
-                <td style={{ padding: "12px", fontWeight: "bold" }}>
+              <tr key={item.id} className={item.unlocked ? "unlocked" : "locked"}>
+                <td className="dish-name">
                   {item.unlocked ? item.name : "🔒 Заблокировано"}
                 </td>
-                <td style={{ padding: "12px" }}>{basePrice} сом</td>
-                <td style={{ padding: "12px", color: "#00ff88" }}>
+                <td>{basePrice} сом</td>
+                <td className="upgrade-bonus">
                   {upgradeBonus > 0 ? `+${upgradeBonus}` : "—"}
                 </td>
-                <td style={{ padding: "12px", color: "#bc13fe", fontWeight: "bold", fontSize: "16px" }}>
+                <td className="total-price">
                   {item.unlocked ? `${item.price} сом` : "???"}
                 </td>
               </tr>
@@ -60,7 +48,7 @@ export default function MenuTable({ menu, upgrades }) {
         </tbody>
       </table>
       
-      <div style={{ marginTop: "15px", fontSize: "10px", color: "#666" }}>
+      <div className="disclaimer">
         * Цены обновляются автоматически при покупке соусов и ингредиентов в магазине.
       </div>
     </div>

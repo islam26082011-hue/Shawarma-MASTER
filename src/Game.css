@@ -1,0 +1,29 @@
+.game-screen {
+  color: #fff;
+  font-family: monospace;
+}
+
+.game-screen .user-info {
+  font-size: 10px;
+  color: #bc13fe;
+  opacity: 0.7;
+}
+
+.game-screen .main-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 20px;
+}
+
+.game-screen .left-panel {
+  flex: 1;
+}
+
+.game-screen .right-sidebar {
+  width: 300px;
+}
+
+.game-screen .button-wrapper {
+  --cooking-time: 10000ms;
+}

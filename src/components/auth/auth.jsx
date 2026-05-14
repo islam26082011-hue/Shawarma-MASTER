@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { auth } from '../../services/firebase.js'; 
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import './auth.css';
 
 const Auth = ({ setUser }) => {
   const [email, setEmail] = useState('');
@@ -24,12 +25,12 @@ const Auth = ({ setUser }) => {
   };
 
   return (
-    <div style={{ padding: '20px', color: 'violet' }}>
+    <div className="auth-container">
       <h2>{isRegister ? 'Регистрация' : 'Вход'}</h2>
       <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
       <input type="password" placeholder="Пароль" onChange={(e) => setPassword(e.target.value)} />
       <button onClick={handleAuth}>{isRegister ? 'Создать акк' : 'Войти'}</button>
-      <p onClick={() => setIsRegister(!isRegister)} style={{ cursor: 'pointer' }}>
+      <p className="toggle-text" onClick={() => setIsRegister(!isRegister)}>
         {isRegister ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Регистрация'}
       </p>
     </div>

@@ -14,6 +14,7 @@ import Apprentice from "./components/apprentice/Apprentice.jsx";
 
 import { playerProgress } from "./constants/playerProgress.js";
 import { LEVEL_REQUIREMENTS } from "./constants/upgrades.js";
+import "./Game.css";
 
 export default function Game({ user }) {
   const [upgrades, setUpgrades] = useState([]);
@@ -31,7 +32,6 @@ export default function Game({ user }) {
 
   // Стажёр: ref чтобы интервал не пересоздавался лишний раз
   const apprenticeRef = useRef(null);
-  const superMixMasterRef = useRef(null);
 
   useGameSync(
     user, money, level, count, total, ingredients, upgrades, cookingTime, menu,
@@ -59,24 +59,6 @@ export default function Game({ user }) {
 
     return () => {
       if (apprenticeRef.current) clearInterval(apprenticeRef.current);
-    };
-  }, [upgrades, moneyMultiplier]);
-
-  // Мастер Super mix: автоматически производит Super mix за 500 каждые 3 секунды
-  useEffect(() => {
-    const hasSuperMixMaster = upgrades.includes("super_mix_master");
-
-    if (hasSuperMixMaster) {
-      superMixMasterRef.current = setInterval(() => {
-        // Добавляем 500 сом каждые 3 секунды (цена Super mix)
-        const superMixPrice = 500;
-        setMoney(prev => prev + (superMixPrice * moneyMultiplier));
-        setTotal(prev => prev + 1);
-      }, 3000);
-    }
-
-    return () => {
-      if (superMixMasterRef.current) clearInterval(superMixMasterRef.current);
     };
   }, [upgrades, moneyMultiplier]);
 
@@ -160,8 +142,8 @@ export default function Game({ user }) {
   };
 
   return (
-    <div className="game-screen" style={{ color: "#fff", fontFamily: "monospace" }}>
-      <p style={{ fontSize: "10px", color: "#bc13fe", opacity: 0.7 }}>
+    <div className="game-screen">
+      <p className="user-info">
         ID ПОВАРА: {user.uid.slice(0, 8)} | {user.email}
       </p>
 
@@ -175,22 +157,23 @@ export default function Game({ user }) {
         onLevelUp={handleLevelUp}
       />
 
-      <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", marginTop: "20px" }}>
-        <div style={{ flex: 1 }}>
-          <Button
-            isCooking={isCooking}
-            setIsCooking={setIsCooking}
-            isSelling={isSelling}
-            count={count}
-            setCount={setCount}
-            cookingTime={cookingTime}
-            ingredients={ingredients}
-            setIngredients={setIngredients}
-            currentCustomer={currentCustomer}
-            activeRecipe={currentCustomer?.order?.recipe}
-            onShawarmaReady={markShawarmaReady}
-            style={{ "--cooking-time": `${cookingTime}ms` }}
-          />
+      <div className="main-layout">
+        <div className="left-panel">
+          <div className="button-wrapper" style={{ "--cooking-time": `${cookingTime}ms` }}>
+            <Button
+              isCooking={isCooking}
+              setIsCooking={setIsCooking}
+              isSelling={isSelling}
+              count={count}
+              setCount={setCount}
+              cookingTime={cookingTime}
+              ingredients={ingredients}
+              setIngredients={setIngredients}
+              currentCustomer={currentCustomer}
+              activeRecipe={currentCustomer?.order?.recipe}
+              onShawarmaReady={markShawarmaReady}
+            />
+          </div>
 
           <Window currentCustomer={currentCustomer} hidden={!currentCustomer} />
 
@@ -208,7 +191,7 @@ export default function Game({ user }) {
           <Apprentice hasApprentice={upgrades.includes("apprentice")} />
         </div>
 
-        <div style={{ width: "300px" }}>
+        <div className="right-sidebar">
           <ProductsBar ingredients={ingredients} />
           <UpgradesList
             money={money}

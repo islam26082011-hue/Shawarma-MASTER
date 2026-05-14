@@ -1,0 +1,75 @@
+.upgrades-container {
+  padding: 20px;
+  max-width: 450px;
+}
+
+.upgrades-container h2 {
+  color: #bc13fe;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.upgrade-item {
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.upgrade-item.locked {
+  background: rgba(91, 91, 91, 0.07);
+  border: 1px solid #333;
+  opacity: 0.5;
+}
+
+.upgrade-item.unlocked {
+  background: rgba(188, 19, 254, 0.05);
+  border: 1px solid #333;
+}
+
+.upgrade-item.purchased {
+  border: 1px solid #bc13fe;
+}
+
+.upgrade-item-info {
+  flex: 1;
+}
+
+.upgrade-item-name {
+  color: #000000;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.upgrade-item-description {
+  font-size: 11px;
+  color: #ff7300;
+}
+
+.upgrade-item-button {
+  background: #bc13fe;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.upgrade-item-button:hover:not(:disabled) {
+  background: #d633ff;
+}
+
+.upgrade-item-button:disabled {
+  background: #222;
+  cursor: not-allowed;
+}
+
+.upgrade-item-badge {
+  color: #bc13fe;
+  font-weight: bold;
+}
