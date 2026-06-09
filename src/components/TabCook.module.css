@@ -1,0 +1,207 @@
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+/* ── Карточка клиента ──────────────────────────────────────────── */
+.customerZone {
+  width: 100%;
+  min-height: 110px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.customerCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  width: 100%;
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.sprite {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface2);
+}
+
+.customerInfo { flex: 1; min-width: 0; }
+
+.phrase {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.orderBadge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.orderName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.orderPrice {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.noCustomer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text3);
+  padding: 20px;
+}
+.noCustomer p { font-size: 14px; }
+
+/* ── Кнопка готовки ────────────────────────────────────────────── */
+.cookZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.cookWrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.cookSvg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 140px; height: 140px;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.progressBg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 4;
+}
+
+.progressFill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px var(--accent));
+}
+
+.cookWrap.cooking .progressFill {
+  animation: cookProgress var(--cooking-time, 10000ms) linear forwards;
+}
+
+@keyframes cookProgress {
+  from { stroke-dashoffset: 339; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.cookInner {
+  position: absolute;
+  top: 10px; left: 10px; right: 10px; bottom: 10px;
+  background: var(--surface2);
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.cookInner:not(.disabled):active {
+  transform: scale(0.95);
+  background: rgba(188, 19, 254, 0.1);
+}
+
+.cookInner.disabled { opacity: 0.4; }
+
+.emoji {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.emoji.spin {
+  animation: spinEmoji 1s linear infinite;
+}
+
+@keyframes spinEmoji {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text2);
+  text-align: center;
+}
+
+/* ── Ингредиенты ───────────────────────────────────────────────── */
+.ingredients {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 13px;
+  transition: border-color 0.2s;
+}
+
+.chip.short { border-color: var(--red); }
+
+.chipAmount {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.chipNeeded {
+  color: var(--text3);
+  font-size: 11px;
+}

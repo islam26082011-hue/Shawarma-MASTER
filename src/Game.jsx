@@ -1,73 +1,75 @@
-import { useState, useEffect, useRef } from "react";
-import { useCustomerFlow } from "./hooks/useCustomerFlow";
-import { useGameSync } from "./hooks/useGameSync";
-
-import Market from "./components/market/market.jsx";
-import Button from "./components/button/button.jsx";
-import Window from "./components/window/window.jsx";
-import ProductsBar from "./components/products_bar/ProductsBar.jsx";
-import LevelUpPanel from "./components/LevelUpPanel/LevelUpPanel.jsx";
-import UpgradesList from "./components/upGrades/upGrades.jsx";
-import MenuTable from "./components/MenuTable/MenuTable.jsx";
-import Header from "./components/header/header.jsx";
-import Apprentice from "./components/apprentice/Apprentice.jsx";
-
-import { playerProgress } from "./constants/playerProgress.js";
+// Импорты
+import { useState, useRef, useCallback } from "react";
+import { menuData } from "./constants/menu.js";
 import { LEVEL_REQUIREMENTS } from "./constants/upgrades.js";
+import { useCustomerFlow } from "./hooks/useCustomerFlow.jsx";
+import { useGameSync } from "./hooks/useGameSync.js";
+import { useApprentice } from "./hooks/useApprentice.js";
+import TabCook from "./components/TabCook.jsx";
+import TabMarket from "./components/TabMarket.jsx";
+import TabUpgrades from "./components/TabUpgrades.jsx";
+import TabMenuTable from "./components/TabMenuTable.jsx";
+import TabLevel from "./components/TabLevel.jsx";
+import {
+  IconCook,
+  IconShop,
+  IconUpgrades,
+  IconMenu,
+  IconLevel,
+} from "./components/NavIcons.jsx";
+import moneyIcon from "./assets/icos/money.png";
 import "./Game.css";
+import s from "./Game.module.css";
+
+function buildInitialMenuState() {
+  return menuData.map((item) => ({ ...item, priceBonus: 0 }));
+}
 
 export default function Game({ user }) {
-  const [upgrades, setUpgrades] = useState([]);
-  const [count, setCount] = useState(0);
-  const [level, setLevel] = useState(1);
   const [money, setMoney] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [count, setCount] = useState(0);
   const [total, setTotal] = useState(0);
-  const [ingredients, setIngredients] = useState(playerProgress.ingredients);
-  const [isCooking, setIsCooking] = useState(false);
+  const [ingredients, setIngredients] = useState({
+    chicken: 5,
+    vegetables: 5,
+    sauce: 5,
+  });
+  const [upgrades, setUpgrades] = useState([]);
   const [cookingTime, setCookingTime] = useState(10000);
-  const [menu, setMenu] = useState([]);
-
-  // Множитель дохода (апгрейд marketing_campaign)
   const [moneyMultiplier, setMoneyMultiplier] = useState(1);
+  const [isCooking, setIsCooking] = useState(false);
+  const [menu, setMenu] = useState(buildInitialMenuState);
+  const [activeTab, setActiveTab] = useState(0);
+  const [notification, setNotification] = useState(null);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
 
-  // Стажёр: ref чтобы интервал не пересоздавался лишний раз
-  const apprenticeRef = useRef(null);
-
-  useGameSync(
-    user, money, level, count, total, ingredients, upgrades, cookingTime, menu,
-    setMoney, setLevel, setCount, setTotal, setIngredients, setUpgrades, setCookingTime, setMenu
-  );
-
-  // Пересчитываем множитель при загрузке апгрейдов из Firebase
-  useEffect(() => {
-    if (upgrades.includes("marketing_campaign")) {
-      setMoneyMultiplier(2);
-    }
-  }, [upgrades]);
-
-  // Стажёр: приносит 500 сом каждые 15 секунд
-  useEffect(() => {
-    const hasApprentice = upgrades.includes("apprentice");
-
-    if (hasApprentice) {
-      apprenticeRef.current = setInterval(() => {
-        const apprenticeIncome = 500;
-        setMoney(prev => prev + (apprenticeIncome * moneyMultiplier));
-        setTotal(prev => prev + 1); // Считаем как одну продажу
-      }, 15000); // 15 секунд
-    }
-
-    return () => {
-      if (apprenticeRef.current) clearInterval(apprenticeRef.current);
-    };
-  }, [upgrades, moneyMultiplier]);
-
-  // Меню с учётом priceBonus (апгрейды цен)
-  // Покупатели платят по этой цене, прайс-лист показывает эту цену
-  const effectiveMenu = menu.map(item => ({
+  // Меню с учётом бонусов от апгрейдов
+  const effectiveMenu = menu.map((item) => ({
     ...item,
     price: item.price + (item.priceBonus || 0),
   }));
+
+  useGameSync(
+    user,
+    money,
+    level,
+    count,
+    total,
+    ingredients,
+    upgrades,
+    cookingTime,
+    menu,
+    setMoney,
+    setLevel,
+    setCount,
+    setTotal,
+    setIngredients,
+    setUpgrades,
+    setCookingTime,
+    setMenu
+  );
 
   const { currentCustomer, isSelling, markShawarmaReady } = useCustomerFlow(
     count,
@@ -75,132 +77,202 @@ export default function Game({ user }) {
     level,
     setMoney,
     setTotal,
-    effectiveMenu,    // передаём меню с реальными ценами
-    moneyMultiplier,  // передаём множитель
+    effectiveMenu,
+    moneyMultiplier
   );
 
-  // --- Апгрейды ---
-  const handleBuyUpgrade = (upgrade) => {
-    const isBought = upgrades.includes(upgrade.id);
-    const canAfford = money >= upgrade.cost;
-    const isLevelMet = level >= upgrade.minLevel;
+  useApprentice(upgrades, moneyMultiplier, setMoney, setTotal);
 
-    if (isBought || !canAfford || !isLevelMet) return;
+  const showNotif = useCallback((msg, type = "success") => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 2000);
+  }, []);
 
-    setMoney(prev => prev - upgrade.cost);
-    setUpgrades(prev => [...prev, upgrade.id]);
+  // ── Покупка апгрейда ──────────────────────────────────────────
+  const handleBuyUpgrade = useCallback(
+    (upgrade) => {
+      if (
+        upgrades.includes(upgrade.id) ||
+        money < upgrade.cost ||
+        level < upgrade.minLevel
+      )
+        return;
 
-    if (upgrade.type === "price") {
-      // Сохраняем бонус отдельно (priceBonus), не трогаем базовую price из menu.js
-      setMenu(prevMenu =>
-        prevMenu.map(item => {
-          if (upgrade.id === "cheese_sauce" && item.id === 2) {
-            return { ...item, priceBonus: (item.priceBonus || 0) + upgrade.value };
-          }
-          if (upgrade.id === "premium_meat" || upgrade.id === "molecular_kitchen") {
-            return { ...item, priceBonus: (item.priceBonus || 0) + upgrade.value };
-          }
-          return item;
-        })
-      );
-    }
+      setMoney((p) => p - upgrade.cost);
+      setUpgrades((p) => [...p, upgrade.id]);
 
-    if (upgrade.type === "speed") {
-      setCookingTime(prev => Math.max(1000, prev - upgrade.value));
-    }
+      if (upgrade.type === "price") {
+        setMenu((prev) =>
+          prev.map((item) => {
+            if (upgrade.id === "cheese_sauce" && item.id === 2)
+              return {
+                ...item,
+                priceBonus: (item.priceBonus || 0) + upgrade.value,
+              };
+            if (["premium_meat", "molecular_kitchen"].includes(upgrade.id))
+              return {
+                ...item,
+                priceBonus: (item.priceBonus || 0) + upgrade.value,
+              };
+            return item;
+          })
+        );
+      }
+      if (upgrade.type === "speed")
+        setCookingTime((p) => Math.max(1000, p - upgrade.value));
+      if (upgrade.type === "multiplier")
+        setMoneyMultiplier((p) => p * upgrade.value);
 
-    if (upgrade.type === "multiplier") {
-      setMoneyMultiplier(prev => prev * upgrade.value);
-    }
+      showNotif(`${upgrade.name} куплено!`);
+    },
+    [upgrades, money, level, showNotif]
+  );
 
-    // "idle" (apprentice) — обрабатывается через useEffect выше
-  };
-
-  // --- Уровни ---
+  // ── Повышение уровня ──────────────────────────────────────────
   const currentReq = LEVEL_REQUIREMENTS[level];
-  const canLevelUp = currentReq
-    ? money >= currentReq.money && total >= currentReq.count
-    : false;
+  const canLevelUp =
+    !!currentReq && money >= currentReq.money && total >= currentReq.count;
 
-  const handleLevelUp = () => {
+  const handleLevelUp = useCallback(() => {
     if (!canLevelUp) return;
-
-    setLevel(prev => {
-      const nextLevel = prev + 1;
-
-      // Разблокируем рецепты по уровню
-      setMenu(prevMenu =>
-        prevMenu.map(item =>
-          item.unlocksAtLevel <= nextLevel
-            ? { ...item, unlocked: true }
-            : item
+    setLevel((prev) => {
+      const next = prev + 1;
+      setMenu((prevMenu) =>
+        prevMenu.map((item) =>
+          item.unlocksAtLevel <= next ? { ...item, unlocked: true } : item
         )
       );
-
-      return nextLevel;
+      showNotif(`🎉 Уровень ${next}! ${currentReq.reward}`);
+      return next;
     });
+  }, [canLevelUp, currentReq, showNotif]);
+
+  // ── Свайп-навигация ───────────────────────────────────────────
+  const TABS_COUNT = 5;
+
+  const onTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
   };
 
+  const onTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) setActiveTab((t) => Math.min(t + 1, TABS_COUNT - 1));
+      else setActiveTab((t) => Math.max(t - 1, 0));
+    }
+    touchStartX.current = null;
+  };
+
+  const tabs = [
+    {
+      icon: <IconCook />,
+      label: "Готовка",
+      badge: currentCustomer ? "!" : null,
+    },
+    { icon: <IconShop />, label: "Рынок" },
+    {
+      icon: <IconUpgrades />,
+      label: "Апгрейды",
+      badge: canLevelUp ? "🆙" : null,
+    },
+    { icon: <IconMenu />, label: "Меню" },
+    { icon: <IconLevel />, label: "Уровень", badge: canLevelUp ? "!" : null },
+  ];
+
   return (
-    <div className="game-screen">
-      <p className="user-info">
-        ID ПОВАРА: {user.uid.slice(0, 8)} | {user.email}
-      </p>
+    <div className={s.game}>
+      {notification && (
+        <div className={`${s.notification} ${s[notification.type]}`}>
+          {notification.msg}
+        </div>
+      )}
 
-      <Header
-        user={user}
-        money={money}
-        total={total}
-        level={level}
-        currentReq={currentReq}
-        canLevelUp={canLevelUp}
-        onLevelUp={handleLevelUp}
-      />
+      {/* Топ-бар */}
+      <header className={s.topBar}>
+        <div className={s.stat}>
+          <span className={s.statVal}>
+            <img src={moneyIcon} alt="" className={s.moneyIcon} />
+            {money.toLocaleString()}
+          </span>
+          <span className={s.statLbl}>сом</span>
+        </div>
 
-      <div className="main-layout">
-        <div className="left-panel">
-          <div className="button-wrapper" style={{ "--cooking-time": `${cookingTime}ms` }}>
-            <Button
-              isCooking={isCooking}
-              setIsCooking={setIsCooking}
-              isSelling={isSelling}
-              count={count}
-              setCount={setCount}
-              cookingTime={cookingTime}
-              ingredients={ingredients}
-              setIngredients={setIngredients}
-              currentCustomer={currentCustomer}
-              activeRecipe={currentCustomer?.order?.recipe}
-              onShawarmaReady={markShawarmaReady}
-            />
-          </div>
+        <div className={s.topCenter}>
+          <span className={s.levelBadge}>ур. {level}</span>
+        </div>
 
-          <Window currentCustomer={currentCustomer} hidden={!currentCustomer} />
+        <div className={`${s.stat} ${s.right}`}>
+          <span className={s.statVal}>{total}</span>
+          <span className={s.statLbl}>продано</span>
+        </div>
+      </header>
 
-          <Market
+      {/* Контент */}
+      <main
+        className={s.content}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {activeTab === 0 && (
+          <TabCook
+            isCooking={isCooking}
+            setIsCooking={setIsCooking}
+            cookingTime={cookingTime}
+            ingredients={ingredients}
+            setIngredients={setIngredients}
+            currentCustomer={currentCustomer}
+            isSelling={isSelling}
+            markShawarmaReady={markShawarmaReady}
+            setCount={setCount}
+            upgrades={upgrades}
+          />
+        )}
+        {activeTab === 1 && (
+          <TabMarket
             money={money}
             setMoney={setMoney}
             ingredients={ingredients}
             setIngredients={setIngredients}
           />
-
-          {/* Прайс-лист показывает effectiveMenu (с бонусами апгрейдов) */}
-          <MenuTable menu={effectiveMenu} upgrades={upgrades} />
-
-          {/* Компонент Стажера с прогресс-баром */}
-          <Apprentice hasApprentice={upgrades.includes("apprentice")} />
-        </div>
-
-        <div className="right-sidebar">
-          <ProductsBar ingredients={ingredients} />
-          <UpgradesList
+        )}
+        {activeTab === 2 && (
+          <TabUpgrades
             money={money}
             level={level}
             purchasedUpgrades={upgrades}
             onBuy={handleBuyUpgrade}
           />
-        </div>
-      </div>
+        )}
+        {activeTab === 3 && <TabMenuTable menu={effectiveMenu} />}
+        {activeTab === 4 && (
+          <TabLevel
+            money={money}
+            total={total}
+            level={level}
+            currentReq={currentReq}
+            canLevelUp={canLevelUp}
+            onLevelUp={handleLevelUp}
+          />
+        )}
+      </main>
+
+      {/* Нижняя навигация */}
+      <nav className={s.nav}>
+        {tabs.map((tab, i) => (
+          <button
+            key={i}
+            className={`${s.navTab} ${activeTab === i ? s.active : ""}`}
+            onClick={() => setActiveTab(i)}
+          >
+            <span className={s.navIcon}>{tab.icon}</span>
+            <span className={s.navLabel}>{tab.label}</span>
+            {tab.badge && <span className={s.navBadge}>{tab.badge}</span>}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }

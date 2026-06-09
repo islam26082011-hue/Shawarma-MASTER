@@ -1,29 +1,35 @@
-.game-screen {
-  color: #fff;
-  font-family: monospace;
+/* ── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.game-screen .user-info {
-  font-size: 10px;
-  color: #bc13fe;
-  opacity: 0.7;
+/* ── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --bg:        #0d0d0f;
+  --surface:   #16161a;
+  --surface2:  #1e1e24;
+  --border:    #2a2a35;
+  --accent:    #bc13fe;
+  --accent2:   #00e5ff;
+  --green:     #00e676;
+  --red:       #ff4444;
+  --gold:      #fbbf24;
+  --text:      #f0f0f5;
+  --text2:     #888899;
+  --text3:     #55556a;
+  --radius:    16px;
+  --radius-sm: 10px;
+  --nav-h:     68px;
+  --top-h:     58px;
+  --font:      'SF Pro Display', -apple-system, 'Helvetica Neue', sans-serif;
 }
 
-.game-screen .main-layout {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  margin-top: 20px;
-}
-
-.game-screen .left-panel {
-  flex: 1;
-}
-
-.game-screen .right-sidebar {
-  width: 300px;
-}
-
-.game-screen .button-wrapper {
-  --cooking-time: 10000ms;
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
 }

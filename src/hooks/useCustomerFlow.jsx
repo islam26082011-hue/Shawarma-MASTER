@@ -22,7 +22,6 @@ export function useCustomerFlow(
   const isSellingRef = useRef(false);
   const shawarmaReadyRef = useRef(false);
 
-  // Синхронизируем refs со state
   currentCustomerRef.current = currentCustomer;
   isSellingRef.current = isSelling;
 
@@ -30,9 +29,7 @@ export function useCustomerFlow(
     shawarmaReadyRef.current = true;
   }, []);
 
-  // =========================
-  // СПАВН ПОКУПАТЕЛЯ
-  // =========================
+  // ── Спавн покупателя ──────────────────────────────────────────────────────
   useEffect(() => {
     if (currentCustomer) return;
     if (isSelling) return;
@@ -44,28 +41,21 @@ export function useCustomerFlow(
     const spawnDelay = Math.max(1000, 5000 - level * 400);
 
     spawnTimerRef.current = setTimeout(() => {
-      const randomCustomer =
-        customersData[Math.floor(Math.random() * customersData.length)];
-      const randomOrder =
-        availableMenu[Math.floor(Math.random() * availableMenu.length)];
-
+      const randomCustomer = customersData[Math.floor(Math.random() * customersData.length)];
+      const randomOrder = availableMenu[Math.floor(Math.random() * availableMenu.length)];
       setCurrentCustomer({ ...randomCustomer, order: randomOrder });
     }, spawnDelay);
 
     return () => clearTimeout(spawnTimerRef.current);
   }, [currentCustomer, isSelling, level, menu]);
 
-  // =========================
-  // ПРОДАЖА
-  // =========================
+  // ── Продажа ───────────────────────────────────────────────────────────────
   // Следим ТОЛЬКО за count и shawarmaReadyRef.
   // isSelling намеренно НЕ в deps — чтобы React не перезапускал
   // этот эффект (и не отменял таймер) когда мы сами ставим isSelling=true.
   useEffect(() => {
     if (count <= 0) return;
     if (!shawarmaReadyRef.current) return;
-
-    // Читаем актуальное значение через ref, не через замыкание
     if (isSellingRef.current) return;
     if (!currentCustomerRef.current) return;
 
@@ -73,7 +63,6 @@ export function useCustomerFlow(
     setIsSelling(true);
     isSellingRef.current = true;
 
-    // Захватываем покупателя через ref — он не протухнет
     const customer = currentCustomerRef.current;
 
     sellTimerRef.current = setTimeout(() => {
@@ -85,17 +74,11 @@ export function useCustomerFlow(
       isSellingRef.current = false;
     }, 700);
 
-    // Cleanup НЕ отменяет таймер — он должен завершиться.
-    // Отменяем только если компонент размонтируется.
     return () => {
       clearTimeout(sellTimerRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, setCount, setMoney, setTotal, moneyMultiplier]);
 
-  return {
-    currentCustomer,
-    isSelling,
-    markShawarmaReady,
-  };
+  return { currentCustomer, isSelling, markShawarmaReady };
 }

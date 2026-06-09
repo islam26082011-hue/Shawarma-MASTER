@@ -5,22 +5,19 @@ import { menuData } from "../constants/menu.js";
 
 // Строим начальное меню всегда из единственного источника правды — menu.js
 function buildInitialMenu() {
-  return menuData.map(item => ({ ...item }));
+  return menuData.map(item => ({ ...item, priceBonus: 0 }));
 }
 
-// Мигрируем сохранённое меню: обновляем цены и рецепты из menu.js,
-// но сохраняем флаг unlocked и прибавки от апгрейдов (priceBonus).
+// Мигрируем сохранённое меню: базовые данные (цена, рецепт) — из menu.js,
+// флаг unlocked и прибавки от апгрейдов (priceBonus) — из сохранения.
 function migrateMenu(savedMenu) {
   return menuData.map(menuItem => {
     const saved = savedMenu.find(s => s.id === menuItem.id);
-    if (!saved) {
-      // Новый пункт появился в menu.js — добавляем его
-      return { ...menuItem };
-    }
+    if (!saved) return { ...menuItem, priceBonus: 0 };
     return {
-      ...menuItem,                              // базовые данные из menu.js (цена, рецепт, название)
+      ...menuItem,
       unlocked: saved.unlocked ?? menuItem.unlocked,
-      priceBonus: saved.priceBonus ?? 0,        // накопленные бонусы от апгрейдов
+      priceBonus: saved.priceBonus ?? 0,
     };
   });
 }
@@ -41,7 +38,6 @@ export function useGameSync(
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-
         setMoney(data.money || 0);
         setLevel(data.level || 1);
         setCount(0); // шаурма на руках не переживает перезагрузку
@@ -50,17 +46,14 @@ export function useGameSync(
         setUpgrades(data.upgrades || []);
         setCookingTime(data.cookingTime || 10000);
 
-        // Мигрируем меню: цены всегда из menu.js, unlocked и priceBonus — из сохранения
         const migratedMenu = migrateMenu(data.menu || []);
         setMenu(migratedMenu);
 
         // Если меню изменилось после миграции — сохраняем обратно
         await updateDoc(docRef, { menu: migratedMenu });
-
       } else {
-        // Новый игрок — строим меню из menu.js
+        // Новый игрок
         const initialMenu = buildInitialMenu();
-
         await setDoc(docRef, {
           money: 0,
           level: 1,
@@ -71,7 +64,6 @@ export function useGameSync(
           cookingTime: 10000,
           menu: initialMenu,
         });
-
         setMenu(initialMenu);
         setIngredients({ chicken: 5, vegetables: 5, sauce: 5 });
       }

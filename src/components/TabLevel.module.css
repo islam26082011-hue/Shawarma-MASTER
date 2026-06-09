@@ -1,0 +1,159 @@
+.tab {
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+/* ── Шапка ─────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.badge {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--accent), #7b00ff);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(188, 19, 254, 0.35);
+}
+
+.headerInfo { display: flex; flex-direction: column; gap: 4px; }
+
+.levelTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.levelArrow {
+  font-size: 13px;
+  color: var(--text2);
+}
+
+/* ── Требования ────────────────────────────────────────────────── */
+.reqs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.reqRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reqMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.met   { color: var(--green) !important; font-weight: 600; }
+.unmet { color: var(--text3) !important; }
+
+.track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.fillMoney {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.fillCount {
+  background: var(--accent2);
+  box-shadow: 0 0 8px var(--accent2);
+}
+
+/* ── Награда ───────────────────────────────────────────────────── */
+.rewardHint {
+  background: rgba(0, 230, 118, 0.08);
+  border: 1px solid rgba(0, 230, 118, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--green);
+  line-height: 1.4;
+}
+
+/* ── Кнопка ────────────────────────────────────────────────────── */
+.btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn.ready {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(188, 19, 254, 0.4);
+}
+.btn.ready:active { transform: scale(0.97); }
+
+.btn.notReady {
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: not-allowed;
+}
+
+/* ── Макс. уровень ─────────────────────────────────────────────── */
+.maxCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.maxCard h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.maxCard p {
+  font-size: 14px;
+  color: var(--text2);
+}
