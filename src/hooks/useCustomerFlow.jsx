@@ -15,21 +15,23 @@ export function useCustomerFlow(
 
   const spawnTimerRef = useRef(null);
   const sellTimerRef = useRef(null);
-
-  // Ref-копии актуальных значений — чтобы таймер продажи
-  // всегда читал свежие данные, даже если deps изменились
   const currentCustomerRef = useRef(null);
   const isSellingRef = useRef(false);
   const shawarmaReadyRef = useRef(false);
 
-  currentCustomerRef.current = currentCustomer;
-  isSellingRef.current = isSelling;
+  useEffect(() => {
+    currentCustomerRef.current = currentCustomer;
+  }, [currentCustomer]);
+
+  useEffect(() => {
+    isSellingRef.current = isSelling;
+  }, [isSelling]);
 
   const markShawarmaReady = useCallback(() => {
     shawarmaReadyRef.current = true;
   }, []);
 
-  // ── Спавн покупателя ──────────────────────────────────────────────────────
+  // Спавн покупателя
   useEffect(() => {
     if (currentCustomer) return;
     if (isSelling) return;
@@ -49,10 +51,7 @@ export function useCustomerFlow(
     return () => clearTimeout(spawnTimerRef.current);
   }, [currentCustomer, isSelling, level, menu]);
 
-  // ── Продажа ───────────────────────────────────────────────────────────────
-  // Следим ТОЛЬКО за count и shawarmaReadyRef.
-  // isSelling намеренно НЕ в deps — чтобы React не перезапускал
-  // этот эффект (и не отменял таймер) когда мы сами ставим isSelling=true.
+  // Продажа
   useEffect(() => {
     if (count <= 0) return;
     if (!shawarmaReadyRef.current) return;
@@ -74,9 +73,7 @@ export function useCustomerFlow(
       isSellingRef.current = false;
     }, 700);
 
-    return () => {
-      clearTimeout(sellTimerRef.current);
-    };
+    return () => clearTimeout(sellTimerRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, setCount, setMoney, setTotal, moneyMultiplier]);
 
