@@ -196,3 +196,25 @@
   80%  { opacity: 1; }
   100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
 }
+
+/* ── Save & Exit button ────────────────────────────────────────── */
+.saveExitBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-size: 11px;
+  font-family: var(--font);
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.saveExitBtn:active {
+  color: var(--accent);
+  border-color: var(--accent);
+}

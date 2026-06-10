@@ -25,7 +25,7 @@ function buildInitialMenuState() {
   return menuData.map((item) => ({ ...item, priceBonus: 0 }));
 }
 
-export default function Game({ user }) {
+export default function Game({ user, onLogout }) {
   const [money, setMoney] = useState(0);
   const [level, setLevel] = useState(1);
   const [count, setCount] = useState(0);
@@ -51,7 +51,7 @@ export default function Game({ user }) {
     price: item.price + (item.priceBonus || 0),
   }));
 
-  useGameSync(
+  const { saveNow } = useGameSync(
     user,
     money,
     level,
@@ -87,6 +87,12 @@ export default function Game({ user }) {
     setNotification({ msg, type });
     setTimeout(() => setNotification(null), 2000);
   }, []);
+
+  // ── Сохранить и выйти ─────────────────────────────────────────
+  const handleSaveAndExit = useCallback(async () => {
+    await saveNow();
+    onLogout();
+  }, [saveNow, onLogout]);
 
   // ── Покупка апгрейда ──────────────────────────────────────────
   const handleBuyUpgrade = useCallback(
@@ -205,8 +211,9 @@ export default function Game({ user }) {
         </div>
 
         <div className={`${s.stat} ${s.right}`}>
-          <span className={s.statVal}>{total}</span>
-          <span className={s.statLbl}>продано</span>
+          <button className={s.saveExitBtn} onClick={handleSaveAndExit}>
+            💾 Выйти
+          </button>
         </div>
       </header>
 

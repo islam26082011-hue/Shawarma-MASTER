@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { menuData } from "../constants/menu.js";
@@ -27,6 +27,28 @@ export function useGameSync(
   setMoney, setLevel, setCount, setTotal, setIngredients, setUpgrades, setCookingTime, setMenu
 ) {
   const isInitialLoad = useRef(true);
+
+  // Актуальные значения для ручного/интервального сохранения
+  const stateRef = useRef({});
+  stateRef.current = { money, level, count, total, ingredients, upgrades, cookingTime, menu };
+
+  // Функция ручного сохранения (используется кнопкой "Сохранить и выйти")
+  const saveNow = useCallback(async () => {
+    if (!user || isInitialLoad.current) return;
+    const docRef = doc(db, "users", user.uid);
+    await updateDoc(docRef, { ...stateRef.current });
+  }, [user]);
+
+  // 3. Автосохранение каждые 60 секунд
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(async () => {
+      if (isInitialLoad.current) return;
+      const docRef = doc(db, "users", user.uid);
+      await updateDoc(docRef, { ...stateRef.current });
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // 1. Загрузка данных при входе
   useEffect(() => {
@@ -88,4 +110,6 @@ export function useGameSync(
 
     return () => clearTimeout(timer);
   }, [money, level, count, total, ingredients, upgrades, cookingTime, menu, user]);
+
+  return { saveNow };
 }
