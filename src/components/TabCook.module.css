@@ -46,16 +46,15 @@
 .customerInfo { flex: 1; min-width: 0; }
 
 .phrase {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--text2);
   line-height: 1.4;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
+  white-space: normal;
+  overflow: visible;
+}
 .orderBadge {
   display: flex;
   align-items: center;
@@ -126,9 +125,7 @@
   filter: drop-shadow(0 0 6px var(--accent));
 }
 
-.cookWrap.cooking .progressFill {
-  animation: cookProgress var(--cooking-time, 10000ms) linear forwards;
-}
+
 
 @keyframes cookProgress {
   from { stroke-dashoffset: 339; }

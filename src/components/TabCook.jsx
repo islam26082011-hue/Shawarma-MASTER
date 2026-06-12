@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import customerSprite from "../assets/sprites/customer.png";
 import ApprenticeBar from "./ApprenticeBar.jsx";
 import s from "./TabCook.module.css";
@@ -9,13 +10,20 @@ export default function TabCook({
   ingredients, setIngredients,
   currentCustomer, isSelling, markShawarmaReady,
   setCount, upgrades,
+  cookingStartedAt, setCookingStartedAt,
 }) {
+  const circumference = 2 * Math.PI * 54;
+  const rafRef = useRef(null);
+  const [dashOffset, setDashOffset] = useState(circumference);
+
   function handleStartCooking() {
     if (isCooking || isSelling || !currentCustomer?.order?.recipe) return;
     const recipe = currentCustomer.order.recipe;
     const canCook = Object.keys(recipe).every(t => (ingredients[t] || 0) >= recipe[t]);
     if (!canCook) return;
 
+    const now = Date.now();
+    setCookingStartedAt(now);
     setIsCooking(true);
     setIngredients(prev => {
       const next = { ...prev };
@@ -28,16 +36,37 @@ export default function TabCook({
       markShawarmaReady?.();
       setCount(1);
       setIsCooking(false);
+      setCookingStartedAt(null);
     }, cookingTime);
   }
 
-  const recipe     = currentCustomer?.order?.recipe;
-  const hasRecipe  = !!recipe;
-  const canCook    = recipe
+  // Прогресс через RAF — считаем от реального времени начала готовки
+  useEffect(() => {
+    if (!isCooking || !cookingStartedAt) {
+      cancelAnimationFrame(rafRef.current);
+      setDashOffset(circumference);
+      return;
+    }
+
+    const tick = () => {
+      const elapsed = Date.now() - cookingStartedAt;
+      const progress = Math.min(elapsed / cookingTime, 1);
+      setDashOffset(circumference * (1 - progress));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [isCooking, cookingStartedAt, cookingTime, circumference]);
+
+  const recipe = currentCustomer?.order?.recipe;
+  const hasRecipe = !!recipe;
+  const canCook = recipe
     ? Object.keys(recipe).every(t => (ingredients[t] || 0) >= recipe[t])
     : false;
-  const isDisabled   = isCooking || isSelling || !currentCustomer;
-  const circumference = 2 * Math.PI * 54;
+  const isDisabled = isCooking || isSelling || !currentCustomer;
   const hasApprentice = upgrades?.includes("apprentice");
 
   return (
@@ -77,8 +106,7 @@ export default function TabCook({
               cx="60" cy="60" r="54"
               style={{
                 strokeDasharray: circumference,
-                strokeDashoffset: circumference,
-                animationDuration: isCooking ? `${cookingTime}ms` : "0s",
+                strokeDashoffset: dashOffset,
               }}
             />
           </svg>
@@ -87,23 +115,23 @@ export default function TabCook({
             : isSelling            ? <span className={s.emoji}>✅</span>
             : hasRecipe && canCook  ? <span className={s.emoji}>🌯</span>
             : hasRecipe && !canCook ? <span className={s.emoji}>📦</span>
-            : <span className={s.emoji}>💤</span>}
+            :                        <span className={s.emoji}>💤</span>}
           </div>
         </div>
         <p className={s.hint}>
-          {isCooking          ? "Готовим..."
-          : isSelling         ? "Подаём клиенту"
-          : !currentCustomer  ? "Нет клиента"
-          : !canCook          ? "Мало ингредиентов"
-          : "Нажми чтобы приготовить"}
+          {isCooking         ? "Готовим..."
+          : isSelling        ? "Подаём клиенту"
+          : !currentCustomer ? "Нет клиента"
+          : !canCook         ? "Мало ингредиентов"
+          :                    "Нажми чтобы приготовить"}
         </p>
       </div>
 
       {/* Ингредиенты */}
       <div className={s.ingredients}>
         {["chicken", "vegetables", "sauce"].map(type => {
-          const amount    = Number(ingredients?.[type]) || 0;
-          const needed    = recipe?.[type] || 0;
+          const amount = Number(ingredients?.[type]) || 0;
+          const needed = recipe?.[type] || 0;
           const hasEnough = amount >= needed;
           return (
             <div key={type} className={`${s.chip} ${needed > 0 && !hasEnough ? s.short : ""}`}>

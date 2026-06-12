@@ -25,7 +25,7 @@ function buildInitialMenuState() {
   return menuData.map((item) => ({ ...item, priceBonus: 0 }));
 }
 
-export default function Game({ user, onLogout }) {
+export default function Game({ user }) {
   const [money, setMoney] = useState(0);
   const [level, setLevel] = useState(1);
   const [count, setCount] = useState(0);
@@ -39,6 +39,7 @@ export default function Game({ user, onLogout }) {
   const [cookingTime, setCookingTime] = useState(10000);
   const [moneyMultiplier, setMoneyMultiplier] = useState(1);
   const [isCooking, setIsCooking] = useState(false);
+  const [cookingStartedAt, setCookingStartedAt] = useState(null);
   const [menu, setMenu] = useState(buildInitialMenuState);
   const [activeTab, setActiveTab] = useState(0);
   const [notification, setNotification] = useState(null);
@@ -51,7 +52,8 @@ export default function Game({ user, onLogout }) {
     price: item.price + (item.priceBonus || 0),
   }));
 
-  const { saveNow } = useGameSync(
+  // FIX: получаем saveStatus для индикатора
+  const { saveNow, saveStatus } = useGameSync(
     user,
     money,
     level,
@@ -88,11 +90,15 @@ export default function Game({ user, onLogout }) {
     setTimeout(() => setNotification(null), 2000);
   }, []);
 
-  // ── Сохранить и выйти ─────────────────────────────────────────
+  // FIX: Сохранить и выйти — без logout, с window.close() и fallback-сообщением
   const handleSaveAndExit = useCallback(async () => {
     await saveNow();
-    onLogout();
-  }, [saveNow, onLogout]);
+    window.close();
+    // Если браузер запретил закрытие — показываем сообщение
+    setTimeout(() => {
+      showNotif("💾 Сохранено. Можете закрыть вкладку.", "success");
+    }, 300);
+  }, [saveNow, showNotif]);
 
   // ── Покупка апгрейда ──────────────────────────────────────────
   const handleBuyUpgrade = useCallback(
@@ -210,10 +216,28 @@ export default function Game({ user, onLogout }) {
           <span className={s.levelBadge}>ур. {level}</span>
         </div>
 
+        {/* FIX: индикатор сохранения + кнопка */}
         <div className={`${s.stat} ${s.right}`}>
-          <button className={s.saveExitBtn} onClick={handleSaveAndExit}>
-            💾 Выйти
-          </button>
+          <div className={s.topRight}>
+            <span
+              className={`${s.saveIndicator} ${
+                s[`saveIndicator_${saveStatus}`]
+              }`}
+              title={
+                saveStatus === "saving"
+                  ? "Сохранение..."
+                  : saveStatus === "saved"
+                  ? "Сохранено"
+                  : ""
+              }
+            >
+              {saveStatus === "saving" && <span className={s.saveSpinner} />}
+              {saveStatus === "saved" && "✓"}
+            </span>
+            <button className={s.saveExitBtn} onClick={handleSaveAndExit}>
+              💾 Выйти
+            </button>
+          </div>
         </div>
       </header>
 
@@ -223,7 +247,7 @@ export default function Game({ user, onLogout }) {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {activeTab === 0 && (
+        <div style={{ display: activeTab === 0 ? "block" : "none" }}>
           <TabCook
             isCooking={isCooking}
             setIsCooking={setIsCooking}
@@ -235,26 +259,30 @@ export default function Game({ user, onLogout }) {
             markShawarmaReady={markShawarmaReady}
             setCount={setCount}
             upgrades={upgrades}
+            cookingStartedAt={cookingStartedAt}
+            setCookingStartedAt={setCookingStartedAt}
           />
-        )}
-        {activeTab === 1 && (
+        </div>
+        <div style={{ display: activeTab === 1 ? "block" : "none" }}>
           <TabMarket
             money={money}
             setMoney={setMoney}
             ingredients={ingredients}
             setIngredients={setIngredients}
           />
-        )}
-        {activeTab === 2 && (
+        </div>
+        <div style={{ display: activeTab === 2 ? "block" : "none" }}>
           <TabUpgrades
             money={money}
             level={level}
             purchasedUpgrades={upgrades}
             onBuy={handleBuyUpgrade}
           />
-        )}
-        {activeTab === 3 && <TabMenuTable menu={effectiveMenu} />}
-        {activeTab === 4 && (
+        </div>
+        <div style={{ display: activeTab === 3 ? "block" : "none" }}>
+          <TabMenuTable menu={effectiveMenu} />
+        </div>
+        <div style={{ display: activeTab === 4 ? "block" : "none" }}>
           <TabLevel
             money={money}
             total={total}
@@ -263,7 +291,7 @@ export default function Game({ user, onLogout }) {
             canLevelUp={canLevelUp}
             onLevelUp={handleLevelUp}
           />
-        )}
+        </div>
       </main>
 
       {/* Нижняя навигация */}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { menuData } from "../constants/menu.js";
@@ -22,37 +22,47 @@ function migrateMenu(savedMenu) {
   });
 }
 
+// saveStatus: "idle" | "saving" | "saved"
 export function useGameSync(
   user, money, level, count, total, ingredients, upgrades, cookingTime, menu,
   setMoney, setLevel, setCount, setTotal, setIngredients, setUpgrades, setCookingTime, setMenu
 ) {
-  const isInitialLoad = useRef(true);
+  // FIX: используем два ref — isReady говорит debounce/интервалу, что данные загружены
+  // isLoading говорит, что прямо сейчас идёт первичная загрузка
+  const isReady = useRef(false);
+  const [saveStatus, setSaveStatus] = useState("idle"); // для индикатора
 
-  // Актуальные значения для ручного/интервального сохранения
+  // Актуальные значения — всегда свежие, без stale closure
   const stateRef = useRef({});
   stateRef.current = { money, level, count, total, ingredients, upgrades, cookingTime, menu };
 
-  // Функция ручного сохранения (используется кнопкой "Сохранить и выйти")
-  const saveNow = useCallback(async () => {
-    if (!user || isInitialLoad.current) return;
-    const docRef = doc(db, "users", user.uid);
-    await updateDoc(docRef, { ...stateRef.current });
-  }, [user]);
-
-  // 3. Автосохранение каждые 60 секунд
-  useEffect(() => {
-    if (!user) return;
-    const interval = setInterval(async () => {
-      if (isInitialLoad.current) return;
-      const docRef = doc(db, "users", user.uid);
+  // Внутренняя функция сохранения с обновлением статуса
+  const performSave = useCallback(async (uid) => {
+    const docRef = doc(db, "users", uid);
+    setSaveStatus("saving");
+    try {
       await updateDoc(docRef, { ...stateRef.current });
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [user]);
+      setSaveStatus("saved");
+      // Через 2.5s вернуть в idle
+      setTimeout(() => setSaveStatus("idle"), 2500);
+    } catch (e) {
+      setSaveStatus("idle");
+      console.error("Save failed:", e);
+    }
+  }, []);
+
+  // Функция ручного сохранения — для кнопки "Сохранить"
+  const saveNow = useCallback(async () => {
+    if (!user) return;
+    await performSave(user.uid);
+  }, [user, performSave]);
 
   // 1. Загрузка данных при входе
   useEffect(() => {
     if (!user) return;
+
+    // FIX: сбрасываем готовность при смене пользователя
+    isReady.current = false;
 
     const loadData = async () => {
       const docRef = doc(db, "users", user.uid);
@@ -60,15 +70,17 @@ export function useGameSync(
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setMoney(data.money || 0);
-        setLevel(data.level || 1);
+        // FIX: сначала все setState, потом isReady = true
+        // Чтобы debounce-эффект не сработал с нулями во время загрузки
+        setMoney(data.money ?? 0);
+        setLevel(data.level ?? 1);
         setCount(0); // шаурма на руках не переживает перезагрузку
-        setTotal(data.total || 0);
-        setIngredients(data.ingredients || { chicken: 0, vegetables: 0, sauce: 0 });
-        setUpgrades(data.upgrades || []);
-        setCookingTime(data.cookingTime || 10000);
+        setTotal(data.total ?? 0);
+        setIngredients(data.ingredients ?? { chicken: 0, vegetables: 0, sauce: 0 });
+        setUpgrades(data.upgrades ?? []);
+        setCookingTime(data.cookingTime ?? 10000);
 
-        const migratedMenu = migrateMenu(data.menu || []);
+        const migratedMenu = migrateMenu(data.menu ?? []);
         setMenu(migratedMenu);
 
         // Если меню изменилось после миграции — сохраняем обратно
@@ -90,26 +102,42 @@ export function useGameSync(
         setIngredients({ chicken: 5, vegetables: 5, sauce: 5 });
       }
 
-      isInitialLoad.current = false;
+      // FIX: isReady = true ПОСЛЕ того как все setState отправлены.
+      // React батчует setState — к следующему рендеру данные уже будут корректными.
+      // Ставим через setTimeout(0) чтобы гарантировать что debounce-эффект
+      // отработает уже с правильными данными, а не с нулями.
+      setTimeout(() => {
+        isReady.current = true;
+      }, 0);
     };
 
     loadData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // 2. Сохранение при изменениях (debounce 2s)
+  // 2. Автосохранение каждые 60 секунд
   useEffect(() => {
-    if (isInitialLoad.current || !user) return;
+    if (!user) return;
+    const interval = setInterval(() => {
+      if (!isReady.current) return;
+      performSave(user.uid);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user, performSave]);
 
-    const timer = setTimeout(async () => {
-      const docRef = doc(db, "users", user.uid);
-      await updateDoc(docRef, {
-        money, level, count, total, ingredients, upgrades, cookingTime, menu,
-      });
+  // 3. Debounce-сохранение при изменениях (2s)
+  // FIX: проверяем isReady.current — не isInitialLoad (который мог быть false преждевременно)
+  useEffect(() => {
+    if (!isReady.current || !user) return;
+
+    const timer = setTimeout(() => {
+      if (!isReady.current) return; // доп. проверка внутри таймера
+      performSave(user.uid);
     }, 2000);
 
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [money, level, count, total, ingredients, upgrades, cookingTime, menu, user]);
 
-  return { saveNow };
+  return { saveNow, saveStatus };
 }
