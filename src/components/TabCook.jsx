@@ -3,10 +3,10 @@ import customerSprite from "../assets/sprites/customer.png";
 import ApprenticeBar from "./ApprenticeBar.jsx";
 import s from "./TabCook.module.css";
 
-const LABELS = { chicken: "🍗", vegetables: "🥬", sauce: "🧴" };
+const LABELS = { chicken: "🍗", vegetables: "🥬", sauce: "🧴" }; // таблички для 'склада'
 
 export default function TabCook({
-  isCooking, setIsCooking, cookingTime,
+  isCooking, setIsCooking, cookingTime, // принимает 
   ingredients, setIngredients,
   currentCustomer, isSelling, markShawarmaReady,
   setCount, upgrades,
@@ -16,39 +16,39 @@ export default function TabCook({
   const rafRef = useRef(null);
   const [dashOffset, setDashOffset] = useState(circumference);
 
-  function handleStartCooking() {
-    if (isCooking || isSelling || !currentCustomer?.order?.recipe) return;
-    const recipe = currentCustomer.order.recipe;
-    const canCook = Object.keys(recipe).every(t => (ingredients[t] || 0) >= recipe[t]);
-    if (!canCook) return;
+  function handleStartCooking() { //функция начала готовки
+    if (isCooking || isSelling || !currentCustomer?.order?.recipe) return; // если не готовим, и нет текущего рецепта
+    const recipe = currentCustomer.order.recipe; // объявляем заказ с рецептом
+    const canCook = Object.keys(recipe).every(t => (ingredients[t] || 0) >= recipe[t]);  // проверяем наличие ингридиента
+    if (!canCook) return; // если не готовим, то обрываем выполнение
 
-    const now = Date.now();
-    setCookingStartedAt(now);
-    setIsCooking(true);
-    setIngredients(prev => {
+    const now = Date.now(); // объявляем время старта
+    setCookingStartedAt(now); // сохраняем в стейт
+    setIsCooking(true); // начинаем готовку, 
+    setIngredients(prev => { // списываем ингридиенты, исходя из рецепта заказа
       const next = { ...prev };
       Object.keys(recipe).forEach(t => {
         next[t] = Number((next[t] - recipe[t]).toFixed(1));
       });
-      return next;
+      return next;  // отдаем ингридиенты
     });
-    setTimeout(() => {
+    setTimeout(() => {  // запускаем таймер, это процесс готовки самой шаурмы
       markShawarmaReady?.();
-      setCount(1);
-      setIsCooking(false);
-      setCookingStartedAt(null);
+      setCount(1); // устанавливаем, что есть 1 не проданная шаурма
+      setIsCooking(false); // заканчиваем готовку
+      setCookingStartedAt(null); // очищаем время начала
     }, cookingTime);
   }
 
   // Прогресс через RAF — считаем от реального времени начала готовки
-  useEffect(() => {
+  useEffect(() => { // анимация готовки
     if (!isCooking || !cookingStartedAt) {
       cancelAnimationFrame(rafRef.current);
       setDashOffset(circumference);
       return;
     }
 
-    const tick = () => {
+    const tick = () => { 
       const elapsed = Date.now() - cookingStartedAt;
       const progress = Math.min(elapsed / cookingTime, 1);
       setDashOffset(circumference * (1 - progress));
@@ -59,7 +59,7 @@ export default function TabCook({
 
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [isCooking, cookingStartedAt, cookingTime, circumference]);
+  }, [isCooking, cookingStartedAt, cookingTime, circumference]); // если меняется состояние готовки, 
 
   const recipe = currentCustomer?.order?.recipe;
   const hasRecipe = !!recipe;

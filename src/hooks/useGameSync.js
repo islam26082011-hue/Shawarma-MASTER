@@ -1,22 +1,36 @@
+// импорты
 import { useEffect, useRef, useCallback, useState } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { menuData } from "../constants/menu.js";
 
-// Строим начальное меню всегда из единственного источника правды — menu.js
-function buildInitialMenu() {
+
+
+function buildInitialMenu() { //объявляем функцию создания базового меню, где добавляем поле priceBonus
   return menuData.map(item => ({ ...item, priceBonus: 0 }));
 }
 
-// Мигрируем сохранённое меню: базовые данные (цена, рецепт) — из menu.js,
-// флаг unlocked и прибавки от апгрейдов (priceBonus) — из сохранения.
-function migrateMenu(savedMenu) {
+
+function migrateMenu(savedMenu) { 
+  // 1. Берем актуальный список блюд из файлов игры (menuData) и перебираем каждое блюдо
   return menuData.map(menuItem => {
+    
+    // 2. Ищем, есть ли это конкретное блюдо в старых сохранениях игрока (ищем по id)
     const saved = savedMenu.find(s => s.id === menuItem.id);
+    
+    // 3. Если игрок никогда не видел этого блюда (это новинка из обновления):
+    // возвращаем стандартное блюдо, но принудительно добавляем ему бонус к цене = 0
     if (!saved) return { ...menuItem, priceBonus: 0 };
+    
+    // 4. Если игрок уже сталкивался с этим блюдом, мы «склеиваем» данные:
     return {
-      ...menuItem,
+      ...menuItem, // Берем базовые данные блюда (картинку, название)
+      
+      // Если в сохранении написано, открыто оно или нет — берем из сохранения. 
+      // Если в сохранении этого нет — берем стандартное значение из кода.
       unlocked: saved.unlocked ?? menuItem.unlocked,
+      
+      // Если в сохранении уже есть бонус к цене — берем его. Если нет — ставим 0.
       priceBonus: saved.priceBonus ?? 0,
     };
   });

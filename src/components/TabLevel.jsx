@@ -1,8 +1,8 @@
 import s from "./TabLevel.module.css";
 
-export default function TabLevel({ money, total, level, currentReq, canLevelUp, onLevelUp }) {
-  if (!currentReq) {
-    return (
+export default function TabLevel({ money, total, level, currentReq, canLevelUp, onLevelUp }) {// пропсы для этой вкладки
+  if (!currentReq) { // если нет требований, значит мы достигли последнего уровня
+    return ( // показываем, что игрок прошел игру
       <div className={s.tab}>
         <div className={s.maxCard}>
           <span style={{ fontSize: 64 }}>🏆</span>
@@ -13,29 +13,29 @@ export default function TabLevel({ money, total, level, currentReq, canLevelUp, 
     );
   }
 
-  const moneyPct = Math.min((money / currentReq.money) * 100, 100);
-  const countPct = Math.min((total / currentReq.count) * 100, 100);
+  const moneyPct = Math.min((money / currentReq.money) * 100, 100); // прогресс по деньгам в порцентах
+  const countPct = Math.min((total / currentReq.count) * 100, 100); // прогресс по тотальному количеству шаурмы в порцентах
 
-  return (
+  return ( //сама верстка, и отображение данных
     <div className={s.tab}>
       <div className={s.header}>
         <div className={s.badge}>{level}</div>
         <div className={s.headerInfo}>
-          <span className={s.levelTitle}>{currentReq.title}</span>
+          <span className={s.levelTitle}>{currentReq.title}</span> //уровни
           <span className={s.levelArrow}>→ Уровень {level + 1}</span>
         </div>
       </div>
 
-      <div className={s.reqs}>
+      <div className={s.reqs}> // требования
         <div className={s.reqRow}>
           <div className={s.reqMeta}>
-            <span>💰 Деньги</span>
+            <span>💰 Деньги</span> 
             <span className={money >= currentReq.money ? s.met : s.unmet}>
               {money.toLocaleString()} / {currentReq.money.toLocaleString()}
             </span>
           </div>
           <div className={s.track}>
-            <div className={`${s.fill} ${s.fillMoney}`} style={{ width: `${moneyPct}%` }} />
+            <div className={`${s.fill} ${s.fillMoney}`} style={{ width: `${moneyPct}%` }} /> 
           </div>
         </div>
 
