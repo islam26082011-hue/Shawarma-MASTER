@@ -1,4 +1,5 @@
-import { SHOP_UPGRADES } from "../constants/upgrades.js";
+import { SHOP_UPGRADES } from "../constants/upgrades.js"; //массив апгрейдов для магазина
+// типа : {id, name, description, type, cost, minLevel, value}
 import s from "./TabUpgrades.module.css";
 
 const TYPE_ICON = { speed: "⚡", price: "💎", idle: "🤖", multiplier: "🚀" };

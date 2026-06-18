@@ -173,7 +173,7 @@ export default function TabMarket({
                       : ""
                   }
                 `}
-                onClick={() => buy(type, 5)}
+                onClick={() => buy(type, 5)} 
                 disabled={
                   isFull ||
                   money < price * 5

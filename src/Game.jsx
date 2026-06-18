@@ -129,20 +129,43 @@ export default function Game({ user }) {
       setMoney((p) => p - upgrade.cost); // отнимаем стоимость апгрейда от денег
       setUpgrades((p) => [...p, upgrade.id]); // добавляем апгрейд в список купленных апгрейдов
 
-      if (upgrade.type === "price") { //если апгрейд имеет тип price, то он повышает цену в меню
+      if (upgrade.type === "price") {
         setMenu((prev) => 
-          prev.map((item) => {// проходим по каждому пункту меню и проверяем, влияет ли на него купленный апгрейд
-            if (upgrade.id === "cheese_sauce" && item.id === 1) // если апгрейд "сырный соус" и это шаурма с сырным соусом, то повышаем её цену
-              return {
-                ...item, //отдаем все свойства шаурмы, но с обновлённой ценой, которая равна базовой цене плюс бонус от апгрейда
-                priceBonus: (item.priceBonus || 0) + upgrade.value,
-              };
-            if (["premium_meat", "molecular_kitchen"].includes(upgrade.id)) // елси же апгрейд "премиум мясо" или "молекулярная кухня", то он повышает цену всех шаурм с курицей, поэтому проверяем, есть ли в рецепте курица, и если да, то повышаем цену
+          prev.map((item) => {
+            // 1. Если апгрейд влияет на конкретное блюдо (например, по ID)
+            // Для этого у апгрейда в SHOP_UPGRADES должно быть поле targetItemId
+            if (upgrade.targetItemId && item.id === upgrade.targetItemId) {
               return {
                 ...item,
                 priceBonus: (item.priceBonus || 0) + upgrade.value,
               };
-            return item; // отдаем остальные пункты меню без изменений
+            }
+      
+            // 2. Если апгрейд улучшает ВСЁ мясо (проверяем наличие chicken в рецепте)
+            if (upgrade.id === "premium_meat" || upgrade.id === "molecular_kitchen") {
+              if (item.recipe && item.recipe.chicken > 0) {
+                return {
+                  ...item,
+                  priceBonus: (item.priceBonus || 0) + upgrade.value,
+                };
+              }
+            }
+            
+            // 3. Если это какой-то другой общий апгрейд соуса (проверяем наличие sauce в рецепте)
+            if (upgrade.id === "cheese_sauce") {
+              // Если ты хочешь, чтобы сырный соус апал Классическую (id: 1), оставь так:
+              if (item.id === 1) { 
+                return {
+                  ...item,
+                  priceBonus: (item.priceBonus || 0) + upgrade.value,
+                };
+              }
+              
+              // ИЛИ, если он должен апать все блюда, где есть соус:
+              // if (item.recipe && item.recipe.sauce > 0) { ... }
+            }
+      
+            return item; // остальные блюда возвращаем без изменений
           })
         );
       }
