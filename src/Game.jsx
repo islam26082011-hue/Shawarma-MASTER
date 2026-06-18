@@ -235,10 +235,10 @@ export default function Game({ user }) {
   ];
 
   return (
-    <div className={s.game}> // главный контейнер игры.
+    <div className={s.game}> 
       {notification && (// если есть уведомление в состоянии, то показываем его в виде блока с классами для стилей и цветовой схемой в зависимости от типа уведомления (успех, ошибка и т.д.)
         <div className={`${s.notification} ${s[notification.type]}`}>
-          {notification.msg} // само сообщение
+          {notification.msg} 
         </div>
       )}
 

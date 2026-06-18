@@ -78,8 +78,8 @@ export function useGameSync(
     // FIX: сбрасываем готовность при смене пользователя
     isReady.current = false;
 
-    const loadData = async () => {
-      const docRef = doc(db, "users", user.uid);
+    const loadData = async () => { //создаем функцию, которая загружает данные
+      const docRef = doc(db, "users", user.uid); //
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
